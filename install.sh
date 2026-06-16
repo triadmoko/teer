@@ -30,7 +30,13 @@ case "$ARCH" in
   *) error "Unsupported architecture: $ARCH" ;;
 esac
 
-ASSET="${BIN_NAME}-${OS_KEY}-${ARCH_KEY}"
+if [ "$OS_KEY" = "darwin" ]; then
+  ASSET="${BIN_NAME}-macos-universal.zip"
+  IS_ZIP=true
+else
+  ASSET="${BIN_NAME}-${OS_KEY}-${ARCH_KEY}"
+  IS_ZIP=false
+fi
 
 # --- resolve version ---
 if [ -n "${TEER_VERSION:-}" ]; then
@@ -65,17 +71,36 @@ else
   wget -qO "$TMP_FILE" "$DOWNLOAD_URL"
 fi
 
-chmod +x "$TMP_FILE"
-
-# --- install ---
-if [ -w "$INSTALL_DIR" ]; then
-  mv "$TMP_FILE" "${INSTALL_DIR}/${BIN_NAME}"
+if [ "$IS_ZIP" = "true" ]; then
+  command -v unzip &>/dev/null || error "unzip is required for macOS install. Run: brew install unzip"
+  TMP_DIR="$(mktemp -d)"
+  trap 'rm -rf "$TMP_FILE" "$TMP_DIR"' EXIT
+  unzip -q "$TMP_FILE" -d "$TMP_DIR"
+  APP_SRC="$TMP_DIR/Teer.app"
+  APP_DEST="/Applications/Teer.app"
+  if [ -d "$APP_DEST" ]; then
+    warn "Replacing existing $APP_DEST"
+    rm -rf "$APP_DEST"
+  fi
+  cp -R "$APP_SRC" "$APP_DEST"
+  # symlink binary to PATH
+  if [ -w "$INSTALL_DIR" ]; then
+    ln -sf "/Applications/Teer.app/Contents/MacOS/teer" "${INSTALL_DIR}/${BIN_NAME}"
+  else
+    sudo ln -sf "/Applications/Teer.app/Contents/MacOS/teer" "${INSTALL_DIR}/${BIN_NAME}"
+  fi
+  info "Installed Teer.app to /Applications"
+  info "Binary symlinked at ${INSTALL_DIR}/${BIN_NAME}"
 else
-  warn "Need sudo to write to $INSTALL_DIR"
-  sudo mv "$TMP_FILE" "${INSTALL_DIR}/${BIN_NAME}"
+  chmod +x "$TMP_FILE"
+  if [ -w "$INSTALL_DIR" ]; then
+    mv "$TMP_FILE" "${INSTALL_DIR}/${BIN_NAME}"
+  else
+    warn "Need sudo to write to $INSTALL_DIR"
+    sudo mv "$TMP_FILE" "${INSTALL_DIR}/${BIN_NAME}"
+  fi
+  info "Installed at ${INSTALL_DIR}/${BIN_NAME}"
 fi
-
-info "Installed at ${INSTALL_DIR}/${BIN_NAME}"
 
 # --- Linux: install dependencies hint ---
 if [ "$OS_KEY" = "linux" ]; then

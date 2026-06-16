@@ -117,6 +117,7 @@ Download the latest binary from [Releases](https://github.com/triadmoko/teer/rel
 | Platform | Asset |
 |----------|-------|
 | Linux x64 | `teer-linux-amd64` |
+| macOS Universal (arm64 + amd64) | `teer-macos-universal.zip` |
 | Windows x64 | `teer-windows-amd64.exe` |
 
 ---
