@@ -19,11 +19,36 @@ export async function addSession(workspaceId: string): Promise<void> {
     form.shell,
     form.cwd,
   );
-  if (sd && form.autoStart) {
-    await workspaceRepository.updateSession({ ...sd, autoStart: true } as SessionDef);
+  if (sd && (form.autoStart || form.startupCommand)) {
+    await workspaceRepository.updateSession({
+      ...sd,
+      autoStart: form.autoStart,
+      startupCommand: form.startupCommand,
+    } as SessionDef);
   }
   await refresh();
   if (sd) selectSession(sd.id);
+}
+
+export async function editSession(s: SessionDef): Promise<void> {
+  const ws = get(workspaces).find((w) => w?.id === s.workspaceId) ?? null;
+  const form = await openSessionForm(ws?.defaultCwd ?? "", {
+    name: s.name,
+    shell: s.shell,
+    cwd: s.cwd,
+    startupCommand: s.startupCommand,
+    autoStart: s.autoStart,
+  });
+  if (!form) return;
+  await workspaceRepository.updateSession({
+    ...s,
+    name: form.name,
+    shell: form.shell,
+    cwd: form.cwd,
+    startupCommand: form.startupCommand,
+    autoStart: form.autoStart,
+  } as SessionDef);
+  await refresh();
 }
 
 export function selectSession(id: string): void {

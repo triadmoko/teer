@@ -20,6 +20,7 @@
     activeSessionId,
     workspaces,
     opened,
+    running,
     addSession,
     selectSession,
     selectWorkspace,
@@ -47,15 +48,19 @@
   const aw = $derived($activeWorkspace);
   const allSessions = $derived(sessionsOf(aw));
 
-  // Semua sessions dari SEMUA workspace yang sudah dibuka — supaya Terminal
-  // components tetap hidup saat switch workspace (preserves xterm scrollback).
+  // Sessions yang dirender sebagai Terminal:
+  // - Workspace AKTIF: SEMUA session-nya tampil (cell/tab kosong utk yang belum
+  //   jalan), supaya tab mode & grid mode konsisten — keduanya lihat 3 terminal.
+  // - Workspace LAIN: hanya yang sudah dibuka/berjalan, supaya Terminal-nya tetap
+  //   hidup saat switch workspace (preserves xterm scrollback) tanpa membengkak.
   const allOpenSessions = $derived<OpenEntry[]>(
     $workspaces.flatMap((ws) => {
       const wsEnv = (ws.env ?? {}) as Record<string, string>;
       const wsCwd = ws.defaultCwd ?? "";
       const wsStartupCommand = ws.startupCommand ?? "";
+      const isActiveWs = ws.id === $activeWorkspaceId;
       return sessionsOf(ws)
-        .filter((s) => $opened.has(s.id))
+        .filter((s) => isActiveWs || $opened.has(s.id) || $running[s.id])
         .map((s) => ({ s, wsEnv, wsCwd, wsStartupCommand }));
     }),
   );

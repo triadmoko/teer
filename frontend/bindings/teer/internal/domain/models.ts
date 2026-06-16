@@ -16,6 +16,7 @@ export class SessionDef {
     "shell": string;
     "cwd": string;
     "env": { [_ in string]?: string };
+    "startupCommand": string;
     "autoStart": boolean;
     "layout"?: { [_ in string]?: any };
 
@@ -39,6 +40,9 @@ export class SessionDef {
         if (!("env" in $$source)) {
             this["env"] = {};
         }
+        if (!("startupCommand" in $$source)) {
+            this["startupCommand"] = "";
+        }
         if (!("autoStart" in $$source)) {
             this["autoStart"] = false;
         }
@@ -51,13 +55,13 @@ export class SessionDef {
      */
     static createFrom($$source: any = {}): SessionDef {
         const $$createField5_0 = $$createType0;
-        const $$createField7_0 = $$createType1;
+        const $$createField8_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("env" in $$parsedSource) {
             $$parsedSource["env"] = $$createField5_0($$parsedSource["env"]);
         }
         if ("layout" in $$parsedSource) {
-            $$parsedSource["layout"] = $$createField7_0($$parsedSource["layout"]);
+            $$parsedSource["layout"] = $$createField8_0($$parsedSource["layout"]);
         }
         return new SessionDef($$parsedSource as Partial<SessionDef>);
     }

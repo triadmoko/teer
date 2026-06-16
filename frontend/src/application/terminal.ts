@@ -17,7 +17,7 @@ export function startSession(
     shell: session.shell ?? "",
     cwd: session.cwd || wsCwd,
     env: mergeEnv(wsEnv, session.env),
-    startupCommand: wsStartupCommand,
+    startupCommand: session.startupCommand || wsStartupCommand,
     cols: size.cols,
     rows: size.rows,
   });

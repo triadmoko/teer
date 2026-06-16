@@ -8,12 +8,14 @@
     IconChevronUp,
     IconChevronDown,
     IconRefresh,
+    IconAdjustments,
   } from "@tabler/icons-svelte";
   import type { SessionDef } from "@domain/models";
   import {
     activeSessionId,
     activeWorkspaceId,
     running,
+    opened,
     layoutMode,
     gridCols,
     gridRowH,
@@ -21,6 +23,7 @@
     fullscreenSessionId,
     selectSession,
     renameSession,
+    editSession,
     closeSession,
     restartSession,
     promptDialog,
@@ -211,6 +214,11 @@
             class="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
             >{s.name}</span
           >
+          <button
+            class="flex shrink-0 cursor-pointer items-center rounded border-none bg-transparent px-1 leading-none text-zinc-500 hover:bg-zinc-700 hover:text-zinc-50"
+            title="Edit terminal"
+            onclick={(e) => { e.stopPropagation(); editSession(s); }}
+          ><IconAdjustments size={12} /></button>
           {#if !$running[s.id]}
             <button
               class="flex shrink-0 cursor-pointer items-center rounded border-none bg-transparent px-1 leading-none text-zinc-500 hover:bg-zinc-700 hover:text-green-400"
@@ -248,6 +256,7 @@
             session={s}
             active={inActiveWs && s.id === $activeSessionId}
             visible={inActiveWs}
+            connect={$opened.has(s.id) || $running[s.id]}
             wsEnv={entry.wsEnv}
             wsCwd={entry.wsCwd}
             wsStartupCommand={entry.wsStartupCommand}
@@ -271,6 +280,7 @@
         session={entry.s}
         active={entry.s.id === $activeSessionId}
         visible={entry.s.id === $activeSessionId}
+        connect={$opened.has(entry.s.id) || $running[entry.s.id]}
         wsEnv={entry.wsEnv}
         wsCwd={entry.wsCwd}
         wsStartupCommand={entry.wsStartupCommand}

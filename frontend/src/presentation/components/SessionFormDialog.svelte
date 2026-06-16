@@ -8,15 +8,20 @@
   let name = $state("");
   let shell = $state("");
   let cwd = $state("");
+  let startupCommand = $state("");
   let autoStart = $state(false);
+  let isEdit = $state(false);
 
   $effect(() => {
     const d = $sessionFormDialog;
     if (!d) return;
-    name = "";
-    shell = "";
-    cwd = d.workspaceDefaultCwd;
-    autoStart = false;
+    const p = d.prefill;
+    isEdit = p !== null;
+    name = p?.name ?? "";
+    shell = p?.shell ?? "";
+    cwd = p?.cwd ?? d.workspaceDefaultCwd;
+    startupCommand = p?.startupCommand ?? "";
+    autoStart = p?.autoStart ?? false;
     tick().then(() => {
       nameInput?.focus();
       nameInput?.select();
@@ -35,6 +40,7 @@
       name: name.trim() || "terminal",
       shell: shell.trim(),
       cwd: cwd.trim(),
+      startupCommand: startupCommand.trim(),
       autoStart,
     });
   }
@@ -78,7 +84,9 @@
       role="dialog"
       aria-modal="true"
     >
-      <div class="mb-4 text-sm font-semibold text-zinc-50">Terminal baru</div>
+      <div class="mb-4 text-sm font-semibold text-zinc-50">
+        {isEdit ? "Edit terminal" : "Terminal baru"}
+      </div>
 
       <div class="flex flex-col gap-3">
 
@@ -132,6 +140,21 @@
           </div>
         </div>
 
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] text-zinc-400"
+            >Startup command <span class="text-zinc-600"
+              >(kosong = ikut workspace)</span
+            ></span
+          >
+          <textarea
+            bind:value={startupCommand}
+            class="w-full resize-y rounded-lg border border-zinc-700 bg-base px-[11px] py-[8px] text-sm text-zinc-50 outline-none focus:border-blue-400"
+            placeholder="mis. npm run dev"
+            rows="2"
+            autocomplete="off"
+          ></textarea>
+        </label>
+
         <label class="flex cursor-pointer items-center gap-2">
           <input
             bind:checked={autoStart}
@@ -155,7 +178,7 @@
         >
         <button
           class="cursor-pointer rounded-lg border border-line-2 bg-blue-600 px-4 py-2 text-[13px] text-white hover:brightness-110"
-          onclick={() => close(true)}>Buat terminal</button
+          onclick={() => close(true)}>{isEdit ? "Simpan" : "Buat terminal"}</button
         >
       </div>
     </div>

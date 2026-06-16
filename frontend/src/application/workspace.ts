@@ -54,20 +54,18 @@ export function selectWorkspace(id: string): void {
         shell: s.shell ?? "",
         cwd: s.cwd || wsCwd,
         env: mergeEnv(wsEnv, s.env),
-        startupCommand: wsStartupCommand,
+        startupCommand: s.startupCommand || wsStartupCommand,
         cols: 80,
         rows: 24,
       }).catch(() => {});
     }
   }
 
+  // Pilih session aktif. autoStart sudah di-open (= connect) di loop atas.
+  // Target non-autoStart TIDAK di-open: tampil sbg cell/tab aktif yang "mati",
+  // jalan hanya saat diklik (selectSession -> open) atau via tombol Restart.
   const target = sessions.find((s) => s.autoStart) ?? sessions[0];
-  if (target) {
-    open(target.id);
-    activeSessionId.set(target.id);
-  } else {
-    activeSessionId.set(null);
-  }
+  activeSessionId.set(target?.id ?? null);
 }
 
 export async function createWorkspace(

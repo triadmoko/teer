@@ -1,7 +1,7 @@
 <script lang="ts">
   import {
     IconX, IconPlus, IconRectangle, IconLayoutGrid, IconRefresh,
-    IconBroadcast, IconSettings,
+    IconBroadcast, IconSettings, IconAdjustments,
   } from "@tabler/icons-svelte";
   import type { SessionDef } from "@domain/models";
   import { COL_CHOICES } from "@domain/layout";
@@ -11,6 +11,7 @@
     selectSession,
     addSession,
     renameSession,
+    editSession,
     closeSession,
     restartSession,
     layoutMode,
@@ -70,6 +71,11 @@
             class="max-w-40 overflow-hidden text-ellipsis"
             title="dobel-klik untuk ganti nama">{s.name}</span
           >
+          <button
+            class="flex cursor-pointer items-center rounded border-none bg-transparent px-[2px] text-zinc-500 hover:bg-zinc-700 hover:text-zinc-50"
+            title="Edit terminal"
+            onclick={(e) => { e.stopPropagation(); editSession(s); }}
+          ><IconAdjustments size={12} /></button>
           {#if !$running[s.id]}
             <button
               class="flex cursor-pointer items-center rounded border-none bg-transparent px-[2px] text-zinc-500 hover:bg-zinc-700 hover:text-green-400"

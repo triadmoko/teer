@@ -15,14 +15,15 @@ type Workspace struct {
 }
 
 type SessionDef struct {
-	ID          string            `json:"id"`
-	WorkspaceID string            `json:"workspaceId"`
-	Name        string            `json:"name"`
-	Shell       string            `json:"shell"`
-	Cwd         string            `json:"cwd"`
-	Env         map[string]string `json:"env"`
-	AutoStart   bool              `json:"autoStart"`
-	Layout      map[string]any    `json:"layout,omitempty"`
+	ID             string            `json:"id"`
+	WorkspaceID    string            `json:"workspaceId"`
+	Name           string            `json:"name"`
+	Shell          string            `json:"shell"`
+	Cwd            string            `json:"cwd"`
+	Env            map[string]string `json:"env"`
+	StartupCommand string            `json:"startupCommand"`
+	AutoStart      bool              `json:"autoStart"`
+	Layout         map[string]any    `json:"layout,omitempty"`
 }
 
 type Config struct {

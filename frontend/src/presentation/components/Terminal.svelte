@@ -26,6 +26,7 @@
     session,
     active = false,
     visible = true,
+    connect = true,
     wsEnv = {},
     wsCwd = "",
     wsStartupCommand = "",
@@ -33,6 +34,9 @@
     session: SessionDef;
     active?: boolean;
             visible?: boolean;
+    // connect: PTY hanya dijalankan saat true. Session non-autoStart yang belum
+    // dibuka tampil sebagai cell/tab "mati" (tombol Restart) sampai dipilih.
+    connect?: boolean;
     wsEnv?: Record<string, string>;
     wsCwd?: string;
     wsStartupCommand?: string;
@@ -46,6 +50,9 @@
   let ro = $state<ResizeObserver | undefined>();
   let fitTimer = $state<ReturnType<typeof setTimeout> | undefined>();
     let exited = $state(false);
+    // started: PTY sudah pernah dijalankan. Cegah double-connect dan cegah
+    // auto-reconnect setelah proses exit (restart hanya via tombol).
+    let started = $state(false);
 
       function refit() {
     if (fitTimer) clearTimeout(fitTimer);
@@ -64,6 +71,23 @@
     return startSession(session, wsEnv, wsCwd, wsStartupCommand, {
       cols: _term.cols,
       rows: _term.rows,
+    });
+  }
+
+  // Hubungkan PTY (sekali). Dipanggil saat mount jika connect=true, atau saat
+  // session non-autoStart akhirnya dipilih (connect berubah jadi true).
+  function connectPty(_term: Terminal) {
+    const sid = untrack(() => session.id);
+    untrack(() => { started = true; });
+    untrack(() => startPty(_term)).then(() => {
+      setRunning(sid, true);
+      untrack(() => { exited = false; });
+      tick().then(() => {
+        try { fit?.fit(); } catch {  }
+        const { cols, rows } = _term;
+        if (cols > 0 && rows > 0) resizeSession(sid, cols, rows);
+        if (untrack(() => visible && active)) _term.focus();
+      });
     });
   }
 
@@ -122,16 +146,7 @@
       ro = _ro;
     });
 
-                untrack(() => startPty(_term)).then(() => {
-      setRunning(sid, true);
-      untrack(() => { exited = false; });
-      tick().then(() => {
-                                                try { _fit.fit(); } catch {  }
-        const { cols, rows } = _term;
-        if (cols > 0 && rows > 0) resizeSession(sid, cols, rows);
-        if (visible && active) _term.focus();
-      });
-    });
+    if (untrack(() => connect)) connectPty(_term);
 
     return () => {
       cleanups.forEach((fn) => fn());
@@ -146,6 +161,13 @@
         ro = undefined;
       });
     };
+  });
+
+    // Lazy-connect: session non-autoStart dirender tanpa PTY (connect=false).
+    // Saat akhirnya dipilih/dibuka (connect -> true), jalankan PTY sekali.
+    $effect(() => {
+    if (!connect || !term || untrack(() => started)) return;
+    connectPty(term);
   });
 
     // Saat terminal jadi visible lagi (mis. switch workspace/tab), paksa
@@ -183,6 +205,7 @@
     const count = $restartCount[sid];
     if (!count || !term) return;
     exited = false;
+    untrack(() => { started = true; });
     const _t = term;
     untrack(() => startPty(_t)).then(() => {
       setRunning(sid, true);
