@@ -4,9 +4,9 @@
 
 > Built with [Wails v3](https://v3.wails.io/) (Go + Svelte + TypeScript)
 
-![Platform](https://img.shields.io/badge/platform-Linux-blue) ![Go](https://img.shields.io/badge/Go-1.25+-00ADD8) ![Status](https://img.shields.io/badge/status-alpha-orange)
+Platform Go Status
 
-![Teer demo — workspace sidebar with grid terminal layout](assets/image.png)
+Teer demo — workspace sidebar with grid terminal layout
 
 ---
 
@@ -35,16 +35,18 @@ Think of it as a terminal emulator (like Tabby or Wave) combined with VS Code's 
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Desktop framework | Wails v3 (alpha.82) |
-| Backend | Go 1.25+ |
-| PTY / shell | `creack/pty` (Linux/macOS) |
-| Frontend | Svelte 5 + TypeScript |
-| Terminal renderer | xterm.js + fit/search/web-links addons |
-| Build tool | Vite |
-| Config storage | JSON at `~/.config/teer/` |
-| FE ↔ BE comms | Wails RPC bindings + Events (streaming I/O) |
+
+| Layer             | Technology                                  |
+| ----------------- | ------------------------------------------- |
+| Desktop framework | Wails v3 (alpha.82)                         |
+| Backend           | Go 1.25+                                    |
+| PTY / shell       | `creack/pty` (Linux/macOS)                  |
+| Frontend          | Svelte 5 + TypeScript                       |
+| Terminal renderer | xterm.js + fit/search/web-links addons      |
+| Build tool        | Vite                                        |
+| Config storage    | JSON at `~/.config/teer/`                   |
+| FE ↔ BE comms     | Wails RPC bindings + Events (streaming I/O) |
+
 
 ---
 
@@ -82,15 +84,45 @@ irm https://raw.githubusercontent.com/triadmoko/teer/main/install.ps1 | iex
 
 The binary is installed to `%LOCALAPPDATA%\Programs\teer\teer.exe` and added to your user `PATH`.
 
+### Uninstall
+
+**Linux / macOS:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.sh | bash
+```
+
+Hapus config juga:
+
+```bash
+TEER_PURGE_CONFIG=1 curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.sh | bash
+```
+
+**Windows** (PowerShell):
+
+```powershell
+irm https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.ps1 | iex
+```
+
+Hapus config juga:
+
+```powershell
+$env:TEER_PURGE_CONFIG = "1"; irm https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.ps1 | iex
+```
+
+Config disimpan di `~/.config/teer/` (Linux/macOS) atau `%APPDATA%\teer\` (Windows).
+
 ### Manual Install
 
 Download the latest binary from [Releases](https://github.com/triadmoko/teer/releases) and place it in a directory on your `PATH`.
 
-| Platform | Asset |
-|----------|-------|
-| Linux x64 | `teer-linux-amd64` |
+
+| Platform                        | Asset                      |
+| ------------------------------- | -------------------------- |
+| Linux x64                       | `teer-linux-amd64`         |
 | macOS Universal (arm64 + amd64) | `teer-macos-universal.zip` |
-| Windows x64 | `teer-windows-amd64.exe` |
+| Windows x64                     | `teer-windows-amd64.exe`   |
+
 
 ---
 
