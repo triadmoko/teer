@@ -87,10 +87,29 @@
     e.stopPropagation();
     await duplicateWorkspace(ws.id);
   }
+
+  let width = $state(220);
+  let resizing = $state(false);
+
+  function startResize(e: MouseEvent) {
+    e.preventDefault();
+    resizing = true;
+    function onMove(ev: MouseEvent) {
+      width = Math.max(140, Math.min(500, ev.clientX));
+    }
+    function onUp() {
+      resizing = false;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
 </script>
 
 <aside
-  class="flex h-full w-[220px] min-w-[220px] flex-col border-r border-line bg-surface"
+  class="relative flex h-full flex-col border-r border-line bg-surface"
+  style="width:{width}px;min-width:{width}px"
 >
   <div
     class="border-b border-line px-4 py-[14px] font-bold tracking-[0.5px] text-zinc-200"
@@ -161,4 +180,10 @@
     class="m-2 flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-line-2 bg-raise p-[9px] text-[13px] text-zinc-300 hover:bg-active hover:text-white"
     onclick={onNew}><IconPlus size={14} /> Workspace baru</button
   >
+
+  <button
+    class="absolute right-0 top-0 h-full w-1 cursor-col-resize border-none bg-transparent p-0 transition-colors hover:bg-blue-500 {resizing ? 'bg-blue-500' : ''}"
+    aria-label="Resize sidebar"
+    onmousedown={startResize}
+  ></button>
 </aside>

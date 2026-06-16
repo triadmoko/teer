@@ -1,6 +1,6 @@
 
 import { get } from "svelte/store";
-import { sessionsOf, type Workspace } from "@domain/models";
+import { sessionsOf, mergeEnv, type Workspace } from "@domain/models";
 import { workspaceRepository, sessionGateway } from "@infrastructure/wails";
 import { guard } from "./error";
 import {
@@ -42,9 +42,23 @@ export function selectWorkspace(id: string): void {
   activeWorkspaceId.set(id);
   const ws = get(workspaces).find((w) => w?.id === id) ?? null;
   const sessions = sessionsOf(ws);
+  const wsEnv = (ws?.env ?? {}) as Record<string, string>;
+  const wsCwd = ws?.defaultCwd ?? "";
+  const wsStartupCommand = ws?.startupCommand ?? "";
 
-    for (const s of sessions) {
-    if (s.autoStart) open(s.id);
+  for (const s of sessions) {
+    if (s.autoStart) {
+      open(s.id);
+      sessionGateway.start({
+        id: s.id,
+        shell: s.shell ?? "",
+        cwd: s.cwd || wsCwd,
+        env: mergeEnv(wsEnv, s.env),
+        startupCommand: wsStartupCommand,
+        cols: 80,
+        rows: 24,
+      }).catch(() => {});
+    }
   }
 
   const target = sessions.find((s) => s.autoStart) ?? sessions[0];

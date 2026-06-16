@@ -10,6 +10,9 @@ import (
 	"teer/internal/service"
 )
 
+// Version di-set saat build: -ldflags "-X main.Version=v1.0.0"
+var Version = "dev"
+
 //go:embed all:frontend/dist
 var assets embed.FS
 
@@ -33,6 +36,7 @@ func main() {
 	app.RegisterService(application.NewService(service.NewSessionService(app.Event)))
 	app.RegisterService(application.NewService(service.NewWorkspaceService(store)))
 	app.RegisterService(application.NewService(service.NewDialogService()))
+	app.RegisterService(application.NewService(service.NewUpdaterService(Version, app.Event)))
 
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:  "teer",

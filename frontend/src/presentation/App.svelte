@@ -8,6 +8,7 @@
   import WorkspaceSettingsDialog from "./components/WorkspaceSettingsDialog.svelte";
   import TerminalSettingsDialog from "./components/TerminalSettingsDialog.svelte";
   import CommandPalette from "./components/CommandPalette.svelte";
+  import UpdateNotification from "./components/UpdateNotification.svelte";
   import { sessionsOf } from "@domain/models";
   import {
     init,
@@ -20,10 +21,14 @@
     selectWorkspace,
     closeSession,
     openCommandPalette,
+    checkUpdate,
+    listenUpdateProgress,
   } from "@application";
 
   $effect(() => {
     init();
+    checkUpdate();
+    return listenUpdateProgress();
   });
 
   const aw = $derived($activeWorkspace);
@@ -68,6 +73,7 @@
 
 <Dialog />
 <ErrorBanner />
+<UpdateNotification />
 <SessionFormDialog />
 <WorkspaceSettingsDialog />
 <TerminalSettingsDialog />
