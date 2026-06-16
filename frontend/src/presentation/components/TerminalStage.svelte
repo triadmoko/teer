@@ -12,6 +12,7 @@
   import type { SessionDef } from "@domain/models";
   import {
     activeSessionId,
+    activeWorkspaceId,
     running,
     layoutMode,
     gridCols,
@@ -35,19 +36,11 @@
   };
 
   let {
-    openSessions,
     allOpenSessions,
     allSessionsCount,
-    awEnv,
-    awCwd,
-    awStartupCommand = "",
   }: {
-    openSessions: SessionDef[];
     allOpenSessions: OpenEntry[];
     allSessionsCount: number;
-    awEnv: Record<string, string>;
-    awCwd: string;
-    awStartupCommand?: string;
   } = $props();
 
     let terminalRefs = $state<Record<string, { find: (q: string, next?: boolean) => void }>>({});
@@ -186,13 +179,16 @@
   {/if}
 
   {#if $layoutMode === "grid"}
-    {#each openSessions as s (s.id)}
+    {#each allOpenSessions as entry (entry.s.id)}
+      {@const s = entry.s}
+      {@const inActiveWs = s.workspaceId === $activeWorkspaceId}
       {@const isFs = $fullscreenSessionId === s.id}
       <div
         class="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-md border bg-base {s.id ===
         $activeSessionId
           ? 'border-blue-500 shadow-[0_0_0_1px_#3b82f6]'
           : 'border-line'} {isFs ? 'absolute inset-0 z-50' : ''}"
+        class:hidden={!inActiveWs}
       >
         <div
           class="flex h-7 shrink-0 cursor-pointer select-none items-center gap-[7px] border-b border-line pl-[10px] pr-[6px] text-xs {s.id ===
@@ -250,11 +246,11 @@
         >
           <Terminal
             session={s}
-            active={s.id === $activeSessionId}
-            visible={true}
-            wsEnv={awEnv}
-            wsCwd={awCwd}
-            wsStartupCommand={awStartupCommand}
+            active={inActiveWs && s.id === $activeSessionId}
+            visible={inActiveWs}
+            wsEnv={entry.wsEnv}
+            wsCwd={entry.wsCwd}
+            wsStartupCommand={entry.wsStartupCommand}
             bind:this={terminalRefs[s.id]}
           />
         </div>

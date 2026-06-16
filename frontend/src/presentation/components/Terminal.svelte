@@ -148,13 +148,28 @@
     };
   });
 
+    // Saat terminal jadi visible lagi (mis. switch workspace/tab), paksa
+    // fit + refresh setelah layout & paint. Pakai double-rAF: display:none ->
+    // block butuh satu frame untuk relayout, frame kedua untuk dimensi final.
+    // Tanpa ini WebKitGTK menampilkan paint basi (blank) sampai di-resize.
     $effect(() => {
-    if (visible && term) {
-      tick().then(() => {
-        refit();
-        term?.refresh(0, (term?.rows ?? 1) - 1);
-      });
-    }
+    if (!visible || !term) return;
+    const _t = term;
+    const _f = fit;
+    const sid = untrack(() => session.id);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        try {
+          _f?.fit();
+        } catch {
+
+        }
+        const { cols, rows } = _t;
+        if (cols > 0 && rows > 0) resizeSession(sid, cols, rows);
+        _t.refresh(0, _t.rows - 1);
+        if (untrack(() => active)) _t.focus();
+      }),
+    );
   });
 
     $effect(() => {
@@ -200,7 +215,7 @@
 
 <div
   class="absolute inset-0 px-2 py-[6px]"
-  class:invisible={!visible}
+  class:hidden={!visible}
   class:pointer-events-none={!visible}
   bind:this={container}
 ></div>

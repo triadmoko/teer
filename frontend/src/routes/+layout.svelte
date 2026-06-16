@@ -46,10 +46,6 @@
 
   const aw = $derived($activeWorkspace);
   const allSessions = $derived(sessionsOf(aw));
-  const openSessions = $derived(allSessions.filter((s) => $opened.has(s.id)));
-  const awEnv = $derived((aw?.env ?? {}) as Record<string, string>);
-  const awCwd = $derived(aw?.defaultCwd ?? "");
-  const awStartupCommand = $derived(aw?.startupCommand ?? "");
 
   // Semua sessions dari SEMUA workspace yang sudah dibuka — supaya Terminal
   // components tetap hidup saat switch workspace (preserves xterm scrollback).
@@ -124,12 +120,8 @@
     {#if aw}
       <TabBar workspaceId={aw.id} sessions={allSessions} />
       <TerminalStage
-        {openSessions}
         {allOpenSessions}
         allSessionsCount={allSessions.length}
-        {awEnv}
-        {awCwd}
-        {awStartupCommand}
       />
     {:else}
       <div

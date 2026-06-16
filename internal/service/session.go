@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"os/exec"
 	"sync"
 
 	"teer/internal/domain"
@@ -195,13 +194,16 @@ func buildEnv(override map[string]string) []string {
 	return env
 }
 
+// exitCoder dipenuhi *exec.ExitError (Unix) maupun *exitError ConPTY (Windows).
+type exitCoder interface{ ExitCode() int }
+
 func exitInfo(err error) (int, string) {
 	if err == nil {
 		return 0, ""
 	}
-	var exitErr *exec.ExitError
-	if errors.As(err, &exitErr) {
-		return exitErr.ExitCode(), ""
+	var ec exitCoder
+	if errors.As(err, &ec) {
+		return ec.ExitCode(), ""
 	}
 	return -1, err.Error()
 }
