@@ -1,4 +1,3 @@
-// Lapisan aplikasi: dialog form edit workspace (nama, warna, cwd, env vars).
 
 import { writable } from "svelte/store";
 import type { Workspace } from "@domain/models";

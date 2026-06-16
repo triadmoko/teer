@@ -1,5 +1,3 @@
-// Adapter Wails untuk persistensi workspace & definisi sesi.
-// Membungkus WorkspaceService (binding RPC Go) di balik antarmuka yang bersih.
 
 import { WorkspaceService } from "@bindings/teer/internal/service";
 import { Call } from "@wailsio/runtime";
@@ -25,8 +23,6 @@ export const workspaceRepository = {
   deleteSession: (workspaceId: string, sessionId: string) =>
     WorkspaceService.DeleteSession(workspaceId, sessionId),
 
-  // ReorderWorkspaces belum ada di generated binding — panggil via ByName.
-  // Binding akan ter-generate ulang saat `wails dev`/`wails build` dijalankan.
-  reorder: (ids: string[]): Promise<void> =>
+      reorder: (ids: string[]): Promise<void> =>
     Call.ByName("teer/internal/service.WorkspaceService.ReorderWorkspaces", ids),
 };

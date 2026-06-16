@@ -9,11 +9,6 @@ import { Create as $Create } from "@wailsio/runtime";
 // @ts-ignore: Unused imports
 import * as time$0 from "../../../time/models.js";
 
-/**
- * SessionDef adalah definisi sebuah sesi terminal yang dipersist.
- * Status runtime (running/exited, PID) TIDAK disimpan di sini — itu dikelola
- * oleh SessionService secara in-memory (PRD §5.2).
- */
 export class SessionDef {
     "id": string;
     "workspaceId": string;
@@ -68,10 +63,6 @@ export class SessionDef {
     }
 }
 
-/**
- * Workspace adalah kumpulan sesi terminal yang dikelompokkan per-proyek.
- * Struktur ini dipersist ke file konfig (lihat lapisan infra/config).
- */
 export class Workspace {
     "id": string;
     "name": string;

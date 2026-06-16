@@ -1,5 +1,3 @@
-// Lapisan aplikasi: command palette (FR-24).
-// Daftar perintah dibangun saat palette dibuka berdasarkan state saat ini.
 
 import { writable, get } from "svelte/store";
 import { workspaces, activeWorkspaceId, activeSessionId, opened } from "./stores";
@@ -37,7 +35,6 @@ export function closeCommandPalette(): void {
 
 const PALETTE_COLORS = ["#60a5fa", "#4ade80", "#facc15", "#f87171", "#c084fc", "#22d3ee"];
 
-/** Bangun daftar perintah berdasarkan state saat ini. */
 export function buildCommands(): Array<PaletteCommand & { run: () => void | Promise<void> }> {
   const wsList = get(workspaces);
   const activeWsId = get(activeWorkspaceId);
@@ -49,8 +46,7 @@ export function buildCommands(): Array<PaletteCommand & { run: () => void | Prom
 
   const cmds: Array<PaletteCommand & { run: () => void | Promise<void> }> = [];
 
-  // --- Workspace ---
-  cmds.push({
+    cmds.push({
     id: "ws:new",
     label: "Workspace Baru",
     group: "Workspace",
@@ -88,8 +84,7 @@ export function buildCommands(): Array<PaletteCommand & { run: () => void | Prom
     });
   }
 
-  // --- Terminal ---
-  if (activeWs) {
+    if (activeWs) {
     cmds.push({
       id: "sess:new",
       label: "Terminal Baru",
@@ -125,8 +120,7 @@ export function buildCommands(): Array<PaletteCommand & { run: () => void | Prom
     });
   }
 
-  // --- Tampilan ---
-  cmds.push({
+    cmds.push({
     id: "layout:tabs",
     label: "Tampilan: Mode Tab",
     group: "Tampilan",
@@ -147,8 +141,7 @@ export function buildCommands(): Array<PaletteCommand & { run: () => void | Prom
     });
   }
 
-  // --- Broadcast ---
-  const bcast = get(broadcastMode);
+    const bcast = get(broadcastMode);
   cmds.push({
     id: "broadcast:toggle",
     label: bcast ? "Nonaktifkan Broadcast Input" : "Aktifkan Broadcast Input",
@@ -156,8 +149,7 @@ export function buildCommands(): Array<PaletteCommand & { run: () => void | Prom
     run: () => broadcastMode.update((v) => !v),
   });
 
-  // --- Pengaturan ---
-  cmds.push({
+    cmds.push({
     id: "settings:terminal",
     label: "Pengaturan Terminal (Font, Tema)",
     group: "Pengaturan",

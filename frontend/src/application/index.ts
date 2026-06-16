@@ -1,5 +1,3 @@
-// Barrel lapisan aplikasi: titik impor tunggal bagi presentation.
-// (Helper internal seperti ./opened sengaja tidak diekspor.)
 
 export * from "./stores";
 export * from "./error";

@@ -44,7 +44,7 @@
       role="presentation"
       onclick={(e) => e.stopPropagation()}
     >
-      <!-- Header -->
+
       <div
         class="flex items-center justify-between border-b border-line px-5 py-4"
       >
@@ -57,9 +57,8 @@
         >
       </div>
 
-      <!-- Body -->
       <div class="space-y-5 px-5 py-5">
-        <!-- Font Size -->
+
         <div class="space-y-2">
           <label class="block text-[12px] font-medium text-zinc-400" for="font-size">
             Ukuran Font
@@ -78,7 +77,6 @@
           </div>
         </div>
 
-        <!-- Font Family -->
         <div class="space-y-2">
           <label class="block text-[12px] font-medium text-zinc-400" for="font-family">
             Font Family
@@ -94,7 +92,6 @@
           </select>
         </div>
 
-        <!-- Theme -->
         <div class="space-y-2">
           <span class="block text-[12px] font-medium text-zinc-400">Tema Warna</span>
           <div class="grid grid-cols-2 gap-[6px]">
@@ -106,7 +103,7 @@
                   : 'border-line bg-raise text-zinc-400 hover:bg-line-3 hover:text-zinc-200'}"
                 onclick={() => terminalThemeName.set(theme.name)}
               >
-                <!-- swatch warna bg/fg/aksen -->
+
                 <span class="flex shrink-0 gap-[3px]">
                   <span
                     class="h-3 w-3 rounded-sm"
@@ -128,7 +125,6 @@
         </div>
       </div>
 
-      <!-- Footer -->
       <div class="border-t border-line px-5 py-4">
         <button
           class="w-full cursor-pointer rounded-[7px] border border-line-2 bg-raise py-[7px] text-[13px] text-zinc-300 hover:bg-active hover:text-white"

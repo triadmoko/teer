@@ -64,7 +64,7 @@
 <svelte:window onkeydown={onKey} />
 
 {#if $sessionFormDialog}
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
+
   <div
     class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50"
     onclick={onOverlayClick}
@@ -80,7 +80,7 @@
       <div class="mb-4 text-sm font-semibold text-zinc-50">Terminal baru</div>
 
       <div class="flex flex-col gap-3">
-        <!-- Nama -->
+
         <label class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400">Nama</span>
           <input
@@ -93,7 +93,6 @@
           />
         </label>
 
-        <!-- Shell -->
         <label class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400"
             >Shell <span class="text-zinc-600">(kosong = default)</span></span
@@ -107,7 +106,6 @@
           />
         </label>
 
-        <!-- Working directory -->
         <div class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400"
             >Working directory <span class="text-zinc-600"
@@ -133,7 +131,6 @@
           </div>
         </div>
 
-        <!-- Auto-start -->
         <label class="flex cursor-pointer items-center gap-2">
           <input
             bind:checked={autoStart}

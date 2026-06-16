@@ -5,9 +5,6 @@
 // @ts-ignore: Unused imports
 import { Create as $Create } from "@wailsio/runtime";
 
-/**
- * StartOptions adalah parameter untuk membangkitkan sebuah sesi.
- */
 export class StartOptions {
     "id": string;
     "shell": string;

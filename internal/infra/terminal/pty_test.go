@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-// TestEchoRoundTrip memastikan kita bisa spawn shell, menulis perintah,
-// dan membaca outputnya kembali lewat PTY.
 func TestEchoRoundTrip(t *testing.T) {
 	p, err := Start(Options{Shell: "/bin/sh", Cols: 80, Rows: 24})
 	if err != nil {
@@ -27,14 +25,12 @@ func TestEchoRoundTrip(t *testing.T) {
 		t.Fatalf("Write: %v", err)
 	}
 
-	// Baca output sampai menemukan penanda atau timeout.
 	got := readUntil(t, p, "teer-ok", 3*time.Second)
 	if !strings.Contains(got, "teer-ok") {
 		t.Fatalf("output tidak memuat penanda; dapat: %q", got)
 	}
 }
 
-// TestResize memastikan resize tidak error dan shell melihat ukuran baru.
 func TestResize(t *testing.T) {
 	p, err := Start(Options{Shell: "/bin/sh", Cols: 80, Rows: 24})
 	if err != nil {

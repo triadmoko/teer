@@ -1,4 +1,3 @@
-// Barrel adapter Wails: titik impor tunggal bagi lapisan aplikasi.
 
 export { workspaceRepository } from "./workspace-repository";
 export { sessionGateway } from "./session-gateway";

@@ -6,8 +6,7 @@
   let selectedIdx = $state(0);
   let input = $state<HTMLInputElement | undefined>();
 
-  // Bangun ulang daftar perintah setiap kali palette dibuka.
-  const allCommands = $derived($commandPaletteOpen ? buildCommands() : []);
+    const allCommands = $derived($commandPaletteOpen ? buildCommands() : []);
 
   const filtered = $derived(() => {
     const q = query.trim().toLowerCase();
@@ -21,15 +20,12 @@
     return list;
   });
 
-  // Reset pilihan saat query berubah.
-  $effect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    query;
+    $effect(() => {
+        query;
     selectedIdx = 0;
   });
 
-  // Fokus input saat palette terbuka.
-  $effect(() => {
+    $effect(() => {
     if ($commandPaletteOpen) {
       query = "";
       selectedIdx = 0;
@@ -65,8 +61,7 @@
     if (e.target === e.currentTarget) closeCommandPalette();
   }
 
-  // Kelompokkan filtered commands per group.
-  const grouped = $derived(() => {
+    const grouped = $derived(() => {
     const list = filtered();
     const groups: Array<{ group: string; items: Array<{ cmd: typeof list[0]; idx: number }> }> = [];
     const seen = new Map<string, number>();
@@ -97,7 +92,7 @@
       role="presentation"
       onclick={(e) => e.stopPropagation()}
     >
-      <!-- Input -->
+
       <div class="flex items-center gap-2 border-b border-line px-4 py-3">
         <svg
           width="14"
@@ -124,7 +119,6 @@
         >
       </div>
 
-      <!-- Daftar perintah -->
       <div class="max-h-[380px] overflow-y-auto py-1">
         {#if filtered().length === 0}
           <div class="px-4 py-6 text-center text-[13px] text-zinc-600">

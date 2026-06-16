@@ -1,4 +1,3 @@
-// Lapisan aplikasi: use case sesi terminal (tambah, pilih, rename, tutup).
 
 import { get, writable } from "svelte/store";
 import { sessionsOf, type SessionDef } from "@domain/models";
@@ -38,7 +37,6 @@ export async function renameSession(s: SessionDef, name: string): Promise<void> 
   await refresh();
 }
 
-/** Tutup sesi: kill PTY + hapus definisinya (FR-10). */
 export async function closeSession(s: SessionDef): Promise<void> {
   await sessionGateway.close(s.id);
   await workspaceRepository.deleteSession(s.workspaceId, s.id);
@@ -52,7 +50,6 @@ export async function closeSession(s: SessionDef): Promise<void> {
   await refresh();
 }
 
-/** Setel status running sebuah sesi (dipanggil oleh komponen Terminal). */
 export function setRunning(id: string, isRunning: boolean): void {
   running.update((m) => {
     const n = { ...m };
@@ -62,11 +59,6 @@ export function setRunning(id: string, isRunning: boolean): void {
   });
 }
 
-/**
- * Tandai sesi untuk di-restart. Sesi yang exited bisa spawn PTY baru
- * dengan definisi yang sama — dipicu dari UI oleh komponen Terminal (FR-15).
- * Komponen Terminal mendeteksi perubahan `restartCount` dan memanggil startPty.
- */
 export const restartCount = writable<Record<string, number>>({});
 
 export function restartSession(id: string): void {

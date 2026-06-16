@@ -1,26 +1,21 @@
 @import "tailwindcss";
 
-/* ── Token tema teer (dark) ─────────────────────────────────────────────
-   Gray gelap custom dipetakan jadi token semantik supaya bisa dipakai
-   sebagai utility (bg-base, border-line, dst). Aksen (blue/green/red/zinc)
-   memakai palette bawaan Tailwind. */
 @theme {
   --font-sans:
     "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono:
     ui-monospace, "Cascadia Code", "JetBrains Mono", Menlo, monospace;
 
-  --color-base: #121214; /* latar utama */
-  --color-surface: #161618; /* sidebar / tabbar / header sel */
-  --color-elevated: #1c1c20; /* modal / sel aktif */
-  --color-raise: #1f1f23; /* hover ringan */
-  --color-active: #26262b; /* item terpilih */
-  --color-line: #232327; /* garis pemisah */
-  --color-line-2: #2c2c31; /* border tombol */
-  --color-line-3: #34343a; /* border kuat / scrollbar */
+  --color-base: #121214;
+  --color-surface: #161618;
+  --color-elevated: #1c1c20;
+  --color-raise: #1f1f23;
+  --color-active: #26262b;
+  --color-line: #232327;
+  --color-line-2: #2c2c31;
+  --color-line-3: #34343a;
 }
 
-/* ── Font lokal ─────────────────────────────────────────────────────── */
 @font-face {
   font-family: "Inter";
   font-style: normal;
@@ -28,7 +23,6 @@
   src: local(""), url("/Inter-Medium.ttf") format("truetype");
 }
 
-/* ── Base global ────────────────────────────────────────────────────── */
 :root {
   color-scheme: dark;
   font-size: 14px;
@@ -51,7 +45,6 @@ body {
   height: 100%;
 }
 
-/* Scrollbar gelap tipis */
 ::-webkit-scrollbar {
   width: 9px;
   height: 9px;

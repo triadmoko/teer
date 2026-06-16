@@ -1,10 +1,7 @@
-// Adapter Wails untuk siklus hidup PTY (SessionService).
-// Membungkus binding RPC start/write/resize/close + daftar sesi berjalan.
 
 import { SessionService } from "@bindings/teer/internal/service";
 import type { StartOptions } from "@bindings/teer/internal/service";
 
-/** Parameter untuk membangkitkan sebuah sesi PTY. */
 export interface StartSessionInput {
   id: string;
   shell: string;

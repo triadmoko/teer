@@ -41,11 +41,9 @@
     awStartupCommand?: string;
   } = $props();
 
-  // Referensi ke instance Terminal per sesi untuk memanggil find() (FR-19).
-  let terminalRefs = $state<Record<string, { find: (q: string, next?: boolean) => void }>>({});
+    let terminalRefs = $state<Record<string, { find: (q: string, next?: boolean) => void }>>({});
 
-  // State search bar (FR-19).
-  let searchOpen = $state(false);
+    let searchOpen = $state(false);
   let searchQuery = $state("");
   let searchInput = $state<HTMLInputElement | undefined>();
 
@@ -75,9 +73,7 @@
     }
   }
 
-  // Ctrl+F toggle search (FR-19). Xterm.js preventDefault Ctrl+F di dalam
-  // terminal, tapi kita tangkap di level window sebagai fallback.
-  function onWindowKey(e: KeyboardEvent) {
+      function onWindowKey(e: KeyboardEvent) {
     if (e.ctrlKey && e.key === "f") {
       e.preventDefault();
       if (searchOpen) closeSearch();
@@ -85,10 +81,7 @@
     }
   }
 
-  // Drag tepi bawah window grid untuk mengubah tinggi baris (semua baris grid
-  // seragam). Pointer capture memastikan event tetap diterima walau kursor
-  // melintas di atas xterm.
-  let resizing = $state(false);
+        let resizing = $state(false);
 
   function startResize(e: PointerEvent) {
     e.preventDefault();
@@ -150,7 +143,7 @@
   style:--cols={$gridCols}
   style:--rowH={`${$gridRowH}px`}
 >
-  <!-- Search bar overlay (FR-19) — hanya mode tabs agar tidak tumpang tindih grid header -->
+
   {#if searchOpen && $layoutMode !== "grid"}
     <div
       class="absolute right-3 top-2 z-50 flex items-center gap-1 rounded-lg border border-zinc-700 bg-elevated px-2 py-1 shadow-lg"

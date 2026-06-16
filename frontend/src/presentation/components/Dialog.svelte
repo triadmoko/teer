@@ -5,8 +5,7 @@
   let value = $state("");
   let input = $state<HTMLInputElement | undefined>();
 
-  // Saat dialog baru muncul, isi nilai awal & fokus ke input.
-  $effect(() => {
+    $effect(() => {
     const d = $dialog;
     if (!d) return;
     value = d.defaultValue;

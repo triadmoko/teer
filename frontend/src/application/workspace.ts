@@ -1,4 +1,3 @@
-// Lapisan aplikasi: use case workspace (bootstrap, CRUD, pemilihan aktif).
 
 import { get } from "svelte/store";
 import { sessionsOf, type Workspace } from "@domain/models";
@@ -15,8 +14,6 @@ import { openWorkspaceSettings } from "./workspaceSettingsDialog";
 
 export { workspaceSettingsDialog } from "./workspaceSettingsDialog";
 
-// ---- Bootstrap & refresh ----
-
 export async function init(): Promise<void> {
   await refresh();
   const list = get(workspaces);
@@ -25,7 +22,6 @@ export async function init(): Promise<void> {
   }
 }
 
-/** Muat ulang daftar workspace dari disk & sinkronkan status running. */
 export async function refresh(): Promise<void> {
   const result = await guard(async () => {
     const list = ((await workspaceRepository.list()) ?? []).filter(
@@ -42,15 +38,12 @@ export async function refresh(): Promise<void> {
   running.set(map);
 }
 
-// ---- Aksi ----
-
 export function selectWorkspace(id: string): void {
   activeWorkspaceId.set(id);
   const ws = get(workspaces).find((w) => w?.id === id) ?? null;
   const sessions = sessionsOf(ws);
 
-  // Bangkitkan otomatis sesi ber-autoStart (FR-13).
-  for (const s of sessions) {
+    for (const s of sessions) {
     if (s.autoStart) open(s.id);
   }
 
@@ -69,7 +62,7 @@ export async function createWorkspace(
   cwd: string,
 ): Promise<void> {
   const ws = await guard(() => workspaceRepository.create(name, color, cwd));
-  if (ws === undefined) return; // gagal (backend); banner sudah di-set
+  if (ws === undefined) return;
   await refresh();
   if (ws) selectWorkspace(ws.id);
 }
@@ -97,8 +90,7 @@ export async function deleteWorkspace(id: string): Promise<void> {
   }
   await refresh();
 
-  // Pilih workspace lain bila yang aktif barusan dihapus.
-  if (!get(activeWorkspaceId)) {
+    if (!get(activeWorkspaceId)) {
     const list = get(workspaces);
     if (list.length) selectWorkspace(list[0].id);
   }
@@ -109,13 +101,11 @@ export async function duplicateWorkspace(id: string): Promise<void> {
   await refresh();
 }
 
-/** Atur ulang urutan workspace sesuai ids baru (FR-6). */
 export async function reorderWorkspaces(ids: string[]): Promise<void> {
   await workspaceRepository.reorder(ids);
   await refresh();
 }
 
-/** Buka dialog pengaturan workspace lengkap (nama, warna, cwd, env). */
 export async function editWorkspace(ws: Workspace): Promise<void> {
   const result = await openWorkspaceSettings(ws);
   if (!result) return;

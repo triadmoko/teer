@@ -1,5 +1,3 @@
-// Lapisan aplikasi: dialog form konfigurasi sesi baru.
-// Dipakai oleh addSession() agar user bisa set shell, cwd, startupCommand, autoStart.
 
 import { writable } from "svelte/store";
 

@@ -22,8 +22,7 @@
   let color = $state(palette[0]);
   let defaultCwd = $state("");
   let startupCommand = $state("");
-  // env vars direpresentasikan sebagai array [key, value] agar bisa di-edit per-baris
-  let envRows = $state<[string, string][]>([]);
+    let envRows = $state<[string, string][]>([]);
 
   $effect(() => {
     const d = $workspaceSettingsDialog;
@@ -109,7 +108,7 @@
 <svelte:window onkeydown={onKey} />
 
 {#if $workspaceSettingsDialog}
-  <!-- svelte-ignore a11y_no_static_element_interactions -->
+
   <div
     class="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50"
     onclick={onOverlayClick}
@@ -127,7 +126,7 @@
       </div>
 
       <div class="flex flex-col gap-3">
-        <!-- Nama -->
+
         <label class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400">Nama</span>
           <input
@@ -139,7 +138,6 @@
           />
         </label>
 
-        <!-- Warna -->
         <div class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400">Warna</span>
           <div class="flex gap-2">
@@ -157,7 +155,6 @@
           </div>
         </div>
 
-        <!-- Default CWD -->
         <div class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400">Default working directory</span>
           <div class="flex gap-1">
@@ -179,7 +176,6 @@
           </div>
         </div>
 
-        <!-- Startup command -->
         <label class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400"
             >Startup command <span class="text-zinc-600">(opsional)</span></span
@@ -193,7 +189,6 @@
           />
         </label>
 
-        <!-- Env vars -->
         <div class="flex flex-col gap-1">
           <div class="flex items-center justify-between">
             <span class="text-[11px] text-zinc-400">Environment variables</span>

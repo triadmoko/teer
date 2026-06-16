@@ -93,7 +93,7 @@
   </div>
 
   <div class="flex shrink-0 items-center gap-[2px] border-l border-line px-2">
-    <!-- Broadcast toggle (FR-16) -->
+
     <button
       class="flex min-w-[26px] cursor-pointer items-center justify-center rounded-[5px] border px-[7px] py-1 {$broadcastMode
         ? 'border-orange-500 bg-orange-500/20 text-orange-300'
@@ -105,7 +105,6 @@
 
     <span class="mx-1 h-[18px] w-px bg-line"></span>
 
-    <!-- Layout: tabs / grid -->
     <button
       class="flex min-w-[26px] cursor-pointer items-center justify-center rounded-[5px] border px-[7px] py-1 {$layoutMode ===
       'tabs'
@@ -140,7 +139,6 @@
 
     <span class="mx-1 h-[18px] w-px bg-line"></span>
 
-    <!-- Terminal settings (FR-20) -->
     <button
       class="flex min-w-[26px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent px-[7px] py-1 text-zinc-400 hover:bg-raise hover:text-zinc-50"
       title="Pengaturan terminal (font, tema)"

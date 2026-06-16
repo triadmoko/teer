@@ -17,8 +17,7 @@
 
   const palette = ["#60a5fa", "#4ade80", "#facc15", "#f87171", "#c084fc", "#22d3ee"];
 
-  // ---- Drag-and-drop reorder (FR-6) ----
-  let dragId = $state<string | null>(null);
+    let dragId = $state<string | null>(null);
   let dragOverId = $state<string | null>(null);
 
   function onDragStart(e: DragEvent, ws: Workspace) {
@@ -57,8 +56,7 @@
     dragOverId = null;
   }
 
-  // Apakah workspace punya minimal satu sesi yang sedang berjalan (indikator titik).
-  function hasRunning(ws: Workspace, run: Record<string, boolean>): boolean {
+    function hasRunning(ws: Workspace, run: Record<string, boolean>): boolean {
     return (ws.sessions ?? []).some((s) => s && run[s.id]);
   }
 

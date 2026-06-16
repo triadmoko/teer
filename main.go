@@ -10,13 +10,10 @@ import (
 	"teer/internal/service"
 )
 
-// Wails meng-embed file frontend (frontend/dist) ke dalam binary.
-//
 //go:embed all:frontend/dist
 var assets embed.FS
 
 func main() {
-	// Inisialisasi store konfig (JSON di ~/.config/teer, PRD §13.1).
 	store, err := config.NewStore()
 	if err != nil {
 		log.Fatalf("gagal inisialisasi store: %v", err)
@@ -33,9 +30,6 @@ func main() {
 		},
 	})
 
-	// Daftarkan service (composition root). SessionService menerima emitter
-	// event Wails untuk mengirim output/exit terminal ke frontend (PRD §8.2);
-	// WorkspaceService menerima store sebagai domain.Repository.
 	app.RegisterService(application.NewService(service.NewSessionService(app.Event)))
 	app.RegisterService(application.NewService(service.NewWorkspaceService(store)))
 	app.RegisterService(application.NewService(service.NewDialogService()))

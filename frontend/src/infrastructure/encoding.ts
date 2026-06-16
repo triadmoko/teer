@@ -1,6 +1,4 @@
-// Lapisan infrastruktur: utilitas encoding low-level.
 
-/** Decode string base64 menjadi byte mentah (output PTY dikirim sebagai base64). */
 export function b64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);

@@ -1,8 +1,3 @@
-// Lapisan aplikasi: dialog dalam-app pengganti window.prompt/confirm bawaan.
-//
-// WebKitGTK (webview Wails di Linux) tidak mendukung prompt()/confirm() —
-// keduanya mengembalikan null/false tanpa menampilkan apa pun. Kita pakai
-// modal Svelte sendiri yang mengembalikan Promise.
 
 import { writable } from "svelte/store";
 
@@ -20,7 +15,6 @@ export interface DialogState {
 
 export const dialog = writable<DialogState | null>(null);
 
-/** Tampilkan input teks. Resolve ke string (OK) atau null (batal). */
 export function promptDialog(
   title: string,
   defaultValue = "",
@@ -39,7 +33,6 @@ export function promptDialog(
   });
 }
 
-/** Tampilkan konfirmasi. Resolve ke true (ya) atau false (batal). */
 export function confirmDialog(
   title: string,
   opts: { confirmLabel?: string; danger?: boolean } = {},

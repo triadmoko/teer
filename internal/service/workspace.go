@@ -1,7 +1,3 @@
-// Package service memuat use-case aplikasi yang di-bind ke frontend lewat Wails.
-//
-// Service di sini hanya bergantung pada port domain (domain.Repository,
-// domain.EventEmitter) dan abstraksi terminal — bukan pada detail infra.
 package service
 
 import (
@@ -14,20 +10,14 @@ import (
 	"teer/internal/domain"
 )
 
-// WorkspaceService mengelola CRUD workspace & definisi sesi serta
-// persistensinya. Di-bind ke frontend.
 type WorkspaceService struct {
 	repo domain.Repository
 }
 
-// NewWorkspaceService membuat service dengan repository terinjeksi.
 func NewWorkspaceService(repo domain.Repository) *WorkspaceService {
 	return &WorkspaceService{repo: repo}
 }
 
-// ---- Workspace ----
-
-// ListWorkspaces mengembalikan seluruh workspace yang tersimpan.
 func (w *WorkspaceService) ListWorkspaces() ([]*domain.Workspace, error) {
 	cfg, err := w.repo.Load()
 	if err != nil {
@@ -36,7 +26,6 @@ func (w *WorkspaceService) ListWorkspaces() ([]*domain.Workspace, error) {
 	return cfg.Workspaces, nil
 }
 
-// CreateWorkspace membuat workspace baru dan mengembalikannya.
 func (w *WorkspaceService) CreateWorkspace(name, color, defaultCwd string) (*domain.Workspace, error) {
 	if name == "" {
 		return nil, errors.New("workspace: nama wajib diisi")
@@ -64,7 +53,6 @@ func (w *WorkspaceService) CreateWorkspace(name, color, defaultCwd string) (*dom
 	return ws, nil
 }
 
-// UpdateWorkspace menyimpan perubahan metadata workspace (nama, warna, cwd, env).
 func (w *WorkspaceService) UpdateWorkspace(updated *domain.Workspace) error {
 	cfg, err := w.repo.Load()
 	if err != nil {
@@ -85,7 +73,6 @@ func (w *WorkspaceService) UpdateWorkspace(updated *domain.Workspace) error {
 	return w.repo.Save(cfg)
 }
 
-// DeleteWorkspace menghapus workspace beserta definisi sesinya.
 func (w *WorkspaceService) DeleteWorkspace(id string) error {
 	cfg, err := w.repo.Load()
 	if err != nil {
@@ -107,7 +94,6 @@ func (w *WorkspaceService) DeleteWorkspace(id string) error {
 	return w.repo.Save(cfg)
 }
 
-// ReorderWorkspaces mengatur ulang urutan workspace sesuai slice ids (FR-6).
 func (w *WorkspaceService) ReorderWorkspaces(ids []string) error {
 	cfg, err := w.repo.Load()
 	if err != nil {
@@ -125,7 +111,6 @@ func (w *WorkspaceService) ReorderWorkspaces(ids []string) error {
 			seen[id] = true
 		}
 	}
-	// Workspace yang tidak ada dalam ids tetap ditambahkan di akhir.
 	for _, ws := range cfg.Workspaces {
 		if !seen[ws.ID] {
 			out = append(out, ws)
@@ -135,8 +120,6 @@ func (w *WorkspaceService) ReorderWorkspaces(ids []string) error {
 	return w.repo.Save(cfg)
 }
 
-// DuplicateWorkspace menyalin workspace beserta definisi sesinya (FR-5).
-// Id baru di-generate untuk workspace dan tiap sesi; tidak ada PTY yang dibuat.
 func (w *WorkspaceService) DuplicateWorkspace(id string) (*domain.Workspace, error) {
 	cfg, err := w.repo.Load()
 	if err != nil {
@@ -174,9 +157,6 @@ func (w *WorkspaceService) DuplicateWorkspace(id string) (*domain.Workspace, err
 	return dup, nil
 }
 
-// ---- Session definition ----
-
-// AddSession menambahkan definisi sesi baru ke sebuah workspace.
 func (w *WorkspaceService) AddSession(workspaceID, name, shell, cwd string) (*domain.SessionDef, error) {
 	cfg, err := w.repo.Load()
 	if err != nil {
@@ -206,7 +186,6 @@ func (w *WorkspaceService) AddSession(workspaceID, name, shell, cwd string) (*do
 	return sd, nil
 }
 
-// UpdateSession menyimpan perubahan definisi sesi (rename, env, autoStart, dll).
 func (w *WorkspaceService) UpdateSession(updated *domain.SessionDef) error {
 	cfg, err := w.repo.Load()
 	if err != nil {
@@ -226,7 +205,6 @@ func (w *WorkspaceService) UpdateSession(updated *domain.SessionDef) error {
 	return errors.New("session: tidak ditemukan")
 }
 
-// DeleteSession menghapus definisi sesi dari workspace.
 func (w *WorkspaceService) DeleteSession(workspaceID, sessionID string) error {
 	cfg, err := w.repo.Load()
 	if err != nil {
@@ -252,8 +230,6 @@ func (w *WorkspaceService) DeleteSession(workspaceID, sessionID string) error {
 	ws.UpdatedAt = time.Now()
 	return w.repo.Save(cfg)
 }
-
-// ---- Helpers ----
 
 func findWorkspace(cfg *domain.Config, id string) *domain.Workspace {
 	for _, ws := range cfg.Workspaces {

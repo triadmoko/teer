@@ -1,8 +1,6 @@
-// Lapisan aplikasi: helper internal untuk set sesi yang sudah di-mount.
 
 import { opened } from "./stores";
 
-/** Tandai sebuah sesi sebagai terbuka (terminalnya di-mount). */
 export function open(id: string): void {
   opened.update((s) => {
     if (s.has(id)) return s;
@@ -12,7 +10,6 @@ export function open(id: string): void {
   });
 }
 
-/** Hapus tanda terbuka sebuah sesi (terminalnya dilepas). */
 export function closeOpened(id: string): void {
   opened.update((s) => {
     if (!s.has(id)) return s;

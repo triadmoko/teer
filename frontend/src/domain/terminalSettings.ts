@@ -1,4 +1,3 @@
-// Lapisan domain: tipe & preset pengaturan tampilan terminal (FR-20).
 
 export interface TerminalTheme {
   name: string;

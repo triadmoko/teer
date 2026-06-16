@@ -9,13 +9,11 @@ import (
 	"github.com/creack/pty"
 )
 
-// unixPTY adalah implementasi PTY untuk Unix (Linux/macOS) memakai creack/pty.
 type unixPTY struct {
 	cmd  *exec.Cmd
 	ptmx *os.File
 }
 
-// Start men-spawn shell di dalam pseudo-terminal baru dengan ukuran awal.
 func Start(opts Options) (PTY, error) {
 	shell := opts.Shell
 	if shell == "" {
@@ -54,10 +52,8 @@ func (p *unixPTY) Resize(cols, rows uint16) error {
 	return pty.Setsize(p.ptmx, &pty.Winsize{Rows: rows, Cols: cols})
 }
 
-// Close mematikan proses shell lalu menutup file descriptor PTY.
 func (p *unixPTY) Close() error {
 	if p.cmd.Process != nil {
-		// Best-effort: minta keluar baik-baik dulu, lalu paksa.
 		_ = p.cmd.Process.Signal(os.Interrupt)
 		_ = p.cmd.Process.Kill()
 	}
@@ -73,7 +69,6 @@ func (p *unixPTY) Pid() int {
 	return p.cmd.Process.Pid
 }
 
-// defaultShell menebak shell default pengguna dari $SHELL, fallback ke /bin/bash.
 func defaultShell() string {
 	if s := os.Getenv("SHELL"); s != "" {
 		return s

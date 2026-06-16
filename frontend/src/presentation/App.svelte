@@ -33,18 +33,13 @@
   const awCwd = $derived(aw?.defaultCwd ?? "");
   const awStartupCommand = $derived(aw?.startupCommand ?? "");
 
-  // Shortcut keyboard (FR-23):
-  // Terminal: Ctrl+T baru, Ctrl+W tutup, Ctrl+Tab pindah tab.
-  // Workspace: Ctrl+Shift+1..9 aktifkan workspace ke-N.
-  function onKey(e: KeyboardEvent) {
-    // Command palette (FR-24): Ctrl+Shift+P.
-    if (e.ctrlKey && e.shiftKey && (e.key === "p" || e.key === "P")) {
+        function onKey(e: KeyboardEvent) {
+        if (e.ctrlKey && e.shiftKey && (e.key === "p" || e.key === "P")) {
       e.preventDefault();
       openCommandPalette();
       return;
     }
-    // Pindah workspace ke-N (Ctrl+Shift+1..9).
-    if (e.ctrlKey && e.shiftKey && e.key >= "1" && e.key <= "9") {
+        if (e.ctrlKey && e.shiftKey && e.key >= "1" && e.key <= "9") {
       e.preventDefault();
       const idx = parseInt(e.key) - 1;
       const ws = $workspaces[idx];
