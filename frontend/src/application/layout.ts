@@ -2,7 +2,7 @@
 import { writable } from "svelte/store";
 import { GRID, clampRowH, type LayoutMode } from "@domain/layout";
 
-export const layoutMode = writable<LayoutMode>("tabs");
+export const layoutMode = writable<LayoutMode>("grid");
 
 export const gridCols = writable<number>(GRID.DEFAULT_COLS);
 
