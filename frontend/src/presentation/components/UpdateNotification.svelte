@@ -23,7 +23,7 @@
   <div
     class="fixed bottom-4 right-4 z-[2000] w-72 rounded-xl border border-line-3 bg-elevated p-4 shadow-[0_8px_32px_rgba(0,0,0,0.5)]"
   >
-    <div class="mb-2 text-sm font-medium text-zinc-100">Memperbarui teer…</div>
+    <div class="mb-2 text-sm font-medium text-zinc-100">Memperbarui Teer…</div>
     {#if $updateProgress}
       <div class="h-1.5 w-full overflow-hidden rounded-full bg-zinc-700">
         <div

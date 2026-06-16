@@ -114,7 +114,7 @@
   <div
     class="border-b border-line px-4 py-[14px] font-bold tracking-[0.5px] text-zinc-200"
   >
-    teer
+    Teer
   </div>
 
   <div class="flex-1 overflow-y-auto p-2">

@@ -23,7 +23,7 @@ func main() {
 	}
 
 	app := application.New(application.Options{
-		Name:        "teer",
+		Name:        "Teer",
 		Description: "Terminal Workspace Manager",
 		Assets: application.AssetOptions{
 			Handler: application.AssetFileServerFS(assets),
@@ -39,7 +39,7 @@ func main() {
 	app.RegisterService(application.NewService(service.NewUpdaterService(Version, app.Event)))
 
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:  "teer",
+		Title:  "Teer",
 		Width:  1200,
 		Height: 760,
 		Mac: application.MacWindow{
