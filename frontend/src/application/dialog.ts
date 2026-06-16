@@ -1,4 +1,4 @@
-// Dialog dalam-app pengganti window.prompt/confirm bawaan browser.
+// Lapisan aplikasi: dialog dalam-app pengganti window.prompt/confirm bawaan.
 //
 // WebKitGTK (webview Wails di Linux) tidak mendukung prompt()/confirm() —
 // keduanya mengembalikan null/false tanpa menampilkan apa pun. Kita pakai

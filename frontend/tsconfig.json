@@ -13,7 +13,17 @@
      */
     "allowJs": true,
     "checkJs": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@domain/*": ["src/domain/*"],
+      "@application": ["src/application/index.ts"],
+      "@application/*": ["src/application/*"],
+      "@infrastructure/wails": ["src/infrastructure/wails/index.ts"],
+      "@infrastructure/*": ["src/infrastructure/*"],
+      "@presentation/*": ["src/presentation/*"],
+      "@bindings/*": ["bindings/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.svelte", "bindings"],
 }
