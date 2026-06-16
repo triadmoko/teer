@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" rx="224" fill="#121214"/>
+
+  <rect x="128" y="128" width="768" height="768" rx="96" fill="#18181B"/>
+
+  <!-- Sidebar + tab bar membentuk huruf T -->
+  <rect x="168" y="168" width="136" height="688" rx="28" fill="#26262B"/>
+  <rect x="168" y="168" width="688" height="112" rx="28" fill="#26262B"/>
+
+  <!-- Tab aktif -->
+  <rect x="344" y="188" width="168" height="72" rx="18" fill="#60A5FA"/>
+
+  <!-- Tab tidak aktif -->
+  <rect x="528" y="200" width="112" height="48" rx="14" fill="#34343A"/>
+
+  <!-- Area terminal -->
+  <rect x="336" y="312" width="488" height="544" rx="32" fill="#0A0A0B"/>
+
+  <!-- Prompt chevron -->
+  <path d="M388 468L428 508L388 548" stroke="#4ADE80" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Garis perintah -->
+  <rect x="452" y="492" width="280" height="20" rx="10" fill="#3F3F46" opacity="0.9"/>
+  <rect x="452" y="548" width="200" height="20" rx="10" fill="#3F3F46" opacity="0.55"/>
+
+  <!-- Indikator workspace -->
+  <circle cx="236" cy="248" r="16" fill="#4ADE80"/>
+  <circle cx="236" cy="304" r="16" fill="#C084FC"/>
+  <circle cx="236" cy="360" r="16" fill="#60A5FA"/>
+
+  <!-- Cursor blok -->
+  <rect x="740" y="476" width="24" height="48" rx="4" fill="#4ADE80" opacity="0.85"/>
+</svg>

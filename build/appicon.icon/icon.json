@@ -20,8 +20,8 @@
               }
             }
           ],
-          "image-name" : "wails_icon_vector.svg",
-          "name" : "wails_icon_vector",
+          "image-name" : "teer_icon.svg",
+          "name" : "teer_icon",
           "position" : {
             "scale" : 1.25,
             "translation-in-points" : [
