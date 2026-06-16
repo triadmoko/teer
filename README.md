@@ -6,6 +6,8 @@
 
 ![Platform](https://img.shields.io/badge/platform-Linux-blue) ![Go](https://img.shields.io/badge/Go-1.25+-00ADD8) ![Status](https://img.shields.io/badge/status-alpha-orange)
 
+![Teer demo — workspace sidebar with grid terminal layout](assets/image.png)
+
 ---
 
 ## What is Teer?
@@ -43,36 +45,6 @@ Think of it as a terminal emulator (like Tabby or Wave) combined with VS Code's 
 | Build tool | Vite |
 | Config storage | JSON at `~/.config/teer/` |
 | FE ↔ BE comms | Wails RPC bindings + Events (streaming I/O) |
-
----
-
-## Project Structure
-
-```
-teer/
-├── main.go                          # Wails entry point, service registration
-├── internal/
-│   ├── domain/
-│   │   ├── entities.go              # Workspace, Session types
-│   │   └── ports.go                 # Interface definitions
-│   ├── infra/
-│   │   ├── config/store.go          # JSON config persistence (~/.config/teer/)
-│   │   └── terminal/pty.go          # PTY abstraction (Unix/Windows)
-│   └── service/
-│       ├── session.go               # Session lifecycle: spawn PTY, stream I/O, resize
-│       ├── workspace.go             # Workspace CRUD + persistence
-│       ├── dialog.go                # Native dialog service
-│       └── updater.go               # App update notifications
-├── frontend/
-│   └── src/
-│       ├── application/             # App-level state and initialization
-│       ├── domain/                  # Frontend domain models
-│       ├── infrastructure/          # Wails binding wrappers
-│       └── presentation/            # Svelte UI components
-├── docs/PRD.md                      # Product Requirements Document
-├── Taskfile.yml                     # Build and dev tasks
-└── build/                           # Platform-specific build configs
-```
 
 ---
 
@@ -129,7 +101,7 @@ Download the latest binary from [Releases](https://github.com/triadmoko/teer/rel
 - Go 1.25+
 - Node.js 18+
 - [Wails v3 CLI](https://v3.wails.io/getting-started/installation)
-- Linux (primary target) — macOS and Windows support planned
+- Linux, macOS, or Windows
 
 ### Development
 
@@ -187,42 +159,6 @@ Application
 Config is stored as JSON at `~/.config/teer/` with `0600` permissions. Terminal scrollback is not persisted in v1.
 
 > Sessions are not preserved after Teer closes — PTY processes are killed on quit. For long-lived sessions (e.g. SSH), use a host-side `tmux` via `startupCommand`.
-
----
-
-## UI Layout
-
-```
-┌───────────┬──────────────────────────────────────────────┐
-│           │  [Tab: server] [Tab: worker] [Tab: db] [ + ]  │
-│ Workspace │ ─────────────────────────────────────────────│
-│  Sidebar  │                                               │
-│           │                                               │
-│ • Codemi  │            xterm.js terminal area             │
-│ • Prod ●  │            (splittable into panes — P1)       │
-│ • Sandbox │                                               │
-│           │                                               │
-│  [+ new]  │                                               │
-└───────────┴──────────────────────────────────────────────┘
-```
-
-- **Left**: workspace list (dot indicator = active sessions running)
-- **Top-right**: tab bar for terminals in active workspace
-- **Center**: xterm.js terminal area
-
----
-
-## Roadmap
-
-| Milestone | Status | Scope |
-|-----------|--------|-------|
-| M0 — Scaffolding | ✅ Done | Wails v3 + Svelte TS setup |
-| M1 — Single terminal | In progress | PTY integration, xterm.js, full I/O |
-| M2 — Multi-terminal + tabs | Planned | Multiple sessions, tab bar, rename/close |
-| M3 — Workspaces | Planned | Sidebar, CRUD, persistence |
-| M4 — Automation + layout | Planned | autoStart, split pane |
-| M5 — Polish | Planned | Shortcuts, command palette, themes |
-| M6 — Cross-platform | Planned | Windows (ConPTY), packaging |
 
 ---
 
