@@ -76,9 +76,54 @@ teer/
 
 ---
 
+## Installation
+
+### Quick Install (Linux / macOS)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/install.sh | bash
+```
+
+Or install a specific version:
+
+```bash
+TEER_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/install.sh | bash
+```
+
+**Linux system dependency** (required for WebKit):
+
+```bash
+# Debian/Ubuntu
+sudo apt install libwebkit2gtk-4.1-0
+
+# Fedora
+sudo dnf install webkitgtk6.0
+```
+
+### Quick Install (Windows)
+
+Run in PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/triadmoko/teer/main/install.ps1 | iex
+```
+
+The binary is installed to `%LOCALAPPDATA%\Programs\teer\teer.exe` and added to your user `PATH`.
+
+### Manual Install
+
+Download the latest binary from [Releases](https://github.com/triadmoko/teer/releases) and place it in a directory on your `PATH`.
+
+| Platform | Asset |
+|----------|-------|
+| Linux x64 | `teer-linux-amd64` |
+| Windows x64 | `teer-windows-amd64.exe` |
+
+---
+
 ## Getting Started
 
-### Prerequisites
+### Prerequisites (for building from source)
 
 - Go 1.25+
 - Node.js 18+
