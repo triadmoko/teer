@@ -6,7 +6,7 @@
     applyUpdate,
     dismissUpdate,
   } from "@application";
-  import { error as setError } from "@application";
+  import { lastError } from "@application";
 
   async function onUpdate() {
     const info = $updateInfo;
@@ -14,7 +14,7 @@
     try {
       await applyUpdate(info.downloadUrl);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Update gagal");
+      lastError.set(e instanceof Error ? e.message : "Update gagal");
     }
   }
 </script>
