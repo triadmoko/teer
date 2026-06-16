@@ -1,7 +1,8 @@
 <script lang="ts">
   import { tick } from "svelte";
-  import { IconPlus, IconTrash } from "@tabler/icons-svelte";
+  import { IconPlus, IconTrash, IconFolderOpen } from "@tabler/icons-svelte";
   import { workspaceSettingsDialog } from "@application/workspaceSettingsDialog";
+  import { PickDirectory } from "@bindings/teer/internal/service/dialogservice";
 
   const palette = [
     "#60a5fa",
@@ -20,6 +21,7 @@
   let name = $state("");
   let color = $state(palette[0]);
   let defaultCwd = $state("");
+  let startupCommand = $state("");
   // env vars direpresentasikan sebagai array [key, value] agar bisa di-edit per-baris
   let envRows = $state<[string, string][]>([]);
 
@@ -30,6 +32,7 @@
     name = ws.name;
     color = ws.color || palette[0];
     defaultCwd = ws.defaultCwd;
+    startupCommand = ws.startupCommand ?? "";
     const entries = Object.entries(ws.env ?? {}).filter(
       ([k]) => k !== undefined,
     ) as [string, string][];
@@ -76,6 +79,7 @@
       name: name.trim() || d.workspace.name,
       color,
       defaultCwd: defaultCwd.trim(),
+      startupCommand: startupCommand.trim(),
       env: buildEnv(),
     });
   }
@@ -94,6 +98,11 @@
   function onOverlayClick(e: MouseEvent) {
     if (e.target !== e.currentTarget) return;
     close(false);
+  }
+
+  async function browseCwd() {
+    const picked = await PickDirectory();
+    if (picked) defaultCwd = picked;
   }
 </script>
 
@@ -149,12 +158,36 @@
         </div>
 
         <!-- Default CWD -->
-        <label class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400">Default working directory</span>
+          <div class="flex gap-1">
+            <input
+              bind:value={defaultCwd}
+              class="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-base px-[11px] py-[8px] text-sm text-zinc-50 outline-none focus:border-blue-400"
+              placeholder="~"
+              type="text"
+              autocomplete="off"
+            />
+            <button
+              class="flex cursor-pointer items-center rounded-lg border border-zinc-700 bg-base px-2 text-zinc-400 hover:border-blue-400 hover:text-blue-400"
+              onclick={browseCwd}
+              title="Pilih direktori"
+              type="button"
+            >
+              <IconFolderOpen size={15} />
+            </button>
+          </div>
+        </div>
+
+        <!-- Startup command -->
+        <label class="flex flex-col gap-1">
+          <span class="text-[11px] text-zinc-400"
+            >Startup command <span class="text-zinc-600">(opsional)</span></span
+          >
           <input
-            bind:value={defaultCwd}
+            bind:value={startupCommand}
             class="w-full rounded-lg border border-zinc-700 bg-base px-[11px] py-[8px] text-sm text-zinc-50 outline-none focus:border-blue-400"
-            placeholder="~"
+            placeholder="npm run dev"
             type="text"
             autocomplete="off"
           />

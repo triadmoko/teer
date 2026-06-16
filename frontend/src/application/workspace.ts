@@ -124,6 +124,7 @@ export async function editWorkspace(ws: Workspace): Promise<void> {
     name: result.name,
     color: result.color,
     defaultCwd: result.defaultCwd,
+    startupCommand: result.startupCommand,
     env: result.env,
   } as Workspace);
   await refresh();

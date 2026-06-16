@@ -32,11 +32,13 @@
     allSessionsCount,
     awEnv,
     awCwd,
+    awStartupCommand = "",
   }: {
     openSessions: SessionDef[];
     allSessionsCount: number;
     awEnv: Record<string, string>;
     awCwd: string;
+    awStartupCommand?: string;
   } = $props();
 
   // Referensi ke instance Terminal per sesi untuk memanggil find() (FR-19).
@@ -250,6 +252,7 @@
             visible={true}
             wsEnv={awEnv}
             wsCwd={awCwd}
+            wsStartupCommand={awStartupCommand}
             bind:this={terminalRefs[s.id]}
           />
         </div>
@@ -272,6 +275,7 @@
         visible={s.id === $activeSessionId}
         wsEnv={awEnv}
         wsCwd={awCwd}
+        wsStartupCommand={awStartupCommand}
         bind:this={terminalRefs[s.id]}
       />
     {/each}

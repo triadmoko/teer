@@ -31,6 +31,7 @@
   const openSessions = $derived(allSessions.filter((s) => $opened.has(s.id)));
   const awEnv = $derived((aw?.env ?? {}) as Record<string, string>);
   const awCwd = $derived(aw?.defaultCwd ?? "");
+  const awStartupCommand = $derived(aw?.startupCommand ?? "");
 
   // Shortcut keyboard (FR-23):
   // Terminal: Ctrl+T baru, Ctrl+W tutup, Ctrl+Tab pindah tab.
@@ -87,6 +88,7 @@
         allSessionsCount={allSessions.length}
         {awEnv}
         {awCwd}
+        {awStartupCommand}
       />
     {:else}
       <div

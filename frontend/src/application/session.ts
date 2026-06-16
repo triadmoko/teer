@@ -19,7 +19,6 @@ export async function addSession(workspaceId: string): Promise<void> {
     form.name,
     form.shell,
     form.cwd,
-    form.startupCommand,
   );
   if (sd && form.autoStart) {
     await workspaceRepository.updateSession({ ...sd, autoStart: true } as SessionDef);

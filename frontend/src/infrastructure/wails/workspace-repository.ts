@@ -17,13 +17,8 @@ export const workspaceRepository = {
 
   duplicate: (id: string) => WorkspaceService.DuplicateWorkspace(id),
 
-  addSession: (
-    workspaceId: string,
-    name: string,
-    shell: string,
-    cwd: string,
-    startupCommand: string,
-  ) => WorkspaceService.AddSession(workspaceId, name, shell, cwd, startupCommand),
+  addSession: (workspaceId: string, name: string, shell: string, cwd: string) =>
+    WorkspaceService.AddSession(workspaceId, name, shell, cwd),
 
   updateSession: (s: SessionDef) => WorkspaceService.UpdateSession(s),
 

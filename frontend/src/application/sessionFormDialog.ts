@@ -7,7 +7,6 @@ export interface SessionFormResult {
   name: string;
   shell: string;
   cwd: string;
-  startupCommand: string;
   autoStart: boolean;
 }
 

@@ -12,6 +12,7 @@ export function startSession(
   session: SessionDef,
   wsEnv: Record<string, string>,
   wsCwd: string,
+  wsStartupCommand: string,
   size: { cols: number; rows: number },
 ): Promise<void> {
   return sessionGateway.start({
@@ -19,7 +20,7 @@ export function startSession(
     shell: session.shell ?? "",
     cwd: session.cwd || wsCwd,
     env: mergeEnv(wsEnv, session.env),
-    startupCommand: session.startupCommand ?? "",
+    startupCommand: wsStartupCommand,
     cols: size.cols,
     rows: size.rows,
   });

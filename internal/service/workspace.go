@@ -77,6 +77,7 @@ func (w *WorkspaceService) UpdateWorkspace(updated *domain.Workspace) error {
 	ws.Name = updated.Name
 	ws.Color = updated.Color
 	ws.DefaultCwd = updated.DefaultCwd
+	ws.StartupCommand = updated.StartupCommand
 	if updated.Env != nil {
 		ws.Env = updated.Env
 	}
@@ -148,14 +149,15 @@ func (w *WorkspaceService) DuplicateWorkspace(id string) (*domain.Workspace, err
 
 	now := time.Now()
 	dup := &domain.Workspace{
-		ID:         uuid.NewString(),
-		Name:       src.Name + " (copy)",
-		Color:      src.Color,
-		DefaultCwd: src.DefaultCwd,
-		Env:        cloneStringMap(src.Env),
-		Sessions:   []*domain.SessionDef{},
-		CreatedAt:  now,
-		UpdatedAt:  now,
+		ID:             uuid.NewString(),
+		Name:           src.Name + " (copy)",
+		Color:          src.Color,
+		DefaultCwd:     src.DefaultCwd,
+		StartupCommand: src.StartupCommand,
+		Env:            cloneStringMap(src.Env),
+		Sessions:       []*domain.SessionDef{},
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}
 	for _, sd := range src.Sessions {
 		nd := *sd
@@ -175,7 +177,7 @@ func (w *WorkspaceService) DuplicateWorkspace(id string) (*domain.Workspace, err
 // ---- Session definition ----
 
 // AddSession menambahkan definisi sesi baru ke sebuah workspace.
-func (w *WorkspaceService) AddSession(workspaceID, name, shell, cwd, startupCommand string) (*domain.SessionDef, error) {
+func (w *WorkspaceService) AddSession(workspaceID, name, shell, cwd string) (*domain.SessionDef, error) {
 	cfg, err := w.repo.Load()
 	if err != nil {
 		return nil, err
@@ -188,14 +190,13 @@ func (w *WorkspaceService) AddSession(workspaceID, name, shell, cwd, startupComm
 		cwd = ws.DefaultCwd
 	}
 	sd := &domain.SessionDef{
-		ID:             uuid.NewString(),
-		WorkspaceID:    workspaceID,
-		Name:           orDefault(name, "terminal"),
-		Shell:          shell,
-		StartupCommand: startupCommand,
-		Cwd:            cwd,
-		Env:            map[string]string{},
-		AutoStart:      false,
+		ID:          uuid.NewString(),
+		WorkspaceID: workspaceID,
+		Name:        orDefault(name, "terminal"),
+		Shell:       shell,
+		Cwd:         cwd,
+		Env:         map[string]string{},
+		AutoStart:   false,
 	}
 	ws.Sessions = append(ws.Sessions, sd)
 	ws.UpdatedAt = time.Now()

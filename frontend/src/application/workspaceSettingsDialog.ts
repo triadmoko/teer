@@ -7,6 +7,7 @@ export interface WorkspaceFormResult {
   name: string;
   color: string;
   defaultCwd: string;
+  startupCommand: string;
   env: Record<string, string>;
 }
 

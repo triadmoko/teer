@@ -19,7 +19,6 @@ export class SessionDef {
     "workspaceId": string;
     "name": string;
     "shell": string;
-    "startupCommand": string;
     "cwd": string;
     "env": { [_ in string]?: string };
     "autoStart": boolean;
@@ -39,9 +38,6 @@ export class SessionDef {
         if (!("shell" in $$source)) {
             this["shell"] = "";
         }
-        if (!("startupCommand" in $$source)) {
-            this["startupCommand"] = "";
-        }
         if (!("cwd" in $$source)) {
             this["cwd"] = "";
         }
@@ -59,14 +55,14 @@ export class SessionDef {
      * Creates a new SessionDef instance from a string or object.
      */
     static createFrom($$source: any = {}): SessionDef {
-        const $$createField6_0 = $$createType0;
-        const $$createField8_0 = $$createType1;
+        const $$createField5_0 = $$createType0;
+        const $$createField7_0 = $$createType1;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("env" in $$parsedSource) {
-            $$parsedSource["env"] = $$createField6_0($$parsedSource["env"]);
+            $$parsedSource["env"] = $$createField5_0($$parsedSource["env"]);
         }
         if ("layout" in $$parsedSource) {
-            $$parsedSource["layout"] = $$createField8_0($$parsedSource["layout"]);
+            $$parsedSource["layout"] = $$createField7_0($$parsedSource["layout"]);
         }
         return new SessionDef($$parsedSource as Partial<SessionDef>);
     }
@@ -81,6 +77,7 @@ export class Workspace {
     "name": string;
     "color": string;
     "defaultCwd": string;
+    "startupCommand": string;
     "env": { [_ in string]?: string };
     "sessions": (SessionDef | null)[];
     "createdAt": time$0.Time;
@@ -99,6 +96,9 @@ export class Workspace {
         }
         if (!("defaultCwd" in $$source)) {
             this["defaultCwd"] = "";
+        }
+        if (!("startupCommand" in $$source)) {
+            this["startupCommand"] = "";
         }
         if (!("env" in $$source)) {
             this["env"] = {};
@@ -120,14 +120,14 @@ export class Workspace {
      * Creates a new Workspace instance from a string or object.
      */
     static createFrom($$source: any = {}): Workspace {
-        const $$createField4_0 = $$createType0;
-        const $$createField5_0 = $$createType4;
+        const $$createField5_0 = $$createType0;
+        const $$createField6_0 = $$createType4;
         let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
         if ("env" in $$parsedSource) {
-            $$parsedSource["env"] = $$createField4_0($$parsedSource["env"]);
+            $$parsedSource["env"] = $$createField5_0($$parsedSource["env"]);
         }
         if ("sessions" in $$parsedSource) {
-            $$parsedSource["sessions"] = $$createField5_0($$parsedSource["sessions"]);
+            $$parsedSource["sessions"] = $$createField6_0($$parsedSource["sessions"]);
         }
         return new Workspace($$parsedSource as Partial<Workspace>);
     }

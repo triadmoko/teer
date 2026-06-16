@@ -1,12 +1,13 @@
 <script lang="ts">
   import { tick } from "svelte";
   import { sessionFormDialog } from "@application/sessionFormDialog";
+  import { IconFolderOpen } from "@tabler/icons-svelte";
+  import { PickDirectory } from "@bindings/teer/internal/service/dialogservice";
 
   let nameInput = $state<HTMLInputElement | undefined>();
   let name = $state("");
   let shell = $state("");
   let cwd = $state("");
-  let startupCommand = $state("");
   let autoStart = $state(false);
 
   $effect(() => {
@@ -15,7 +16,6 @@
     name = "";
     shell = "";
     cwd = d.workspaceDefaultCwd;
-    startupCommand = "";
     autoStart = false;
     tick().then(() => {
       nameInput?.focus();
@@ -35,7 +35,6 @@
       name: name.trim() || "terminal",
       shell: shell.trim(),
       cwd: cwd.trim(),
-      startupCommand: startupCommand.trim(),
       autoStart,
     });
   }
@@ -54,6 +53,11 @@
   function onOverlayClick(e: MouseEvent) {
     if (e.target !== e.currentTarget) return;
     close(false);
+  }
+
+  async function browseCwd() {
+    const picked = await PickDirectory();
+    if (picked) cwd = picked;
   }
 </script>
 
@@ -104,34 +108,30 @@
         </label>
 
         <!-- Working directory -->
-        <label class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400"
             >Working directory <span class="text-zinc-600"
               >(kosong = ikut workspace)</span
             ></span
           >
-          <input
-            bind:value={cwd}
-            class="w-full rounded-lg border border-zinc-700 bg-base px-[11px] py-[8px] text-sm text-zinc-50 outline-none focus:border-blue-400"
-            placeholder="~"
-            type="text"
-            autocomplete="off"
-          />
-        </label>
-
-        <!-- Startup command -->
-        <label class="flex flex-col gap-1">
-          <span class="text-[11px] text-zinc-400"
-            >Startup command <span class="text-zinc-600">(opsional)</span></span
-          >
-          <input
-            bind:value={startupCommand}
-            class="w-full rounded-lg border border-zinc-700 bg-base px-[11px] py-[8px] text-sm text-zinc-50 outline-none focus:border-blue-400"
-            placeholder="npm run dev"
-            type="text"
-            autocomplete="off"
-          />
-        </label>
+          <div class="flex gap-1">
+            <input
+              bind:value={cwd}
+              class="min-w-0 flex-1 rounded-lg border border-zinc-700 bg-base px-[11px] py-[8px] text-sm text-zinc-50 outline-none focus:border-blue-400"
+              placeholder="~"
+              type="text"
+              autocomplete="off"
+            />
+            <button
+              class="flex cursor-pointer items-center rounded-lg border border-zinc-700 bg-base px-2 text-zinc-400 hover:border-blue-400 hover:text-blue-400"
+              onclick={browseCwd}
+              title="Pilih direktori"
+              type="button"
+            >
+              <IconFolderOpen size={15} />
+            </button>
+          </div>
+        </div>
 
         <!-- Auto-start -->
         <label class="flex cursor-pointer items-center gap-2">

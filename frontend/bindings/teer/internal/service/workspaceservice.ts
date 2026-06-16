@@ -18,8 +18,8 @@ import * as domain$0 from "../domain/models.js";
 /**
  * AddSession menambahkan definisi sesi baru ke sebuah workspace.
  */
-export function AddSession(workspaceID: string, name: string, shell: string, cwd: string, startupCommand: string): $CancellablePromise<domain$0.SessionDef | null> {
-    return $Call.ByID(1986591254, workspaceID, name, shell, cwd, startupCommand).then(($result: any) => {
+export function AddSession(workspaceID: string, name: string, shell: string, cwd: string): $CancellablePromise<domain$0.SessionDef | null> {
+    return $Call.ByID(1986591254, workspaceID, name, shell, cwd).then(($result: any) => {
         return $$createType1($result);
     });
 }

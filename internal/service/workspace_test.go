@@ -52,7 +52,7 @@ func TestWorkspaceCRUD(t *testing.T) {
 	}
 
 	// Tambah sesi; cwd kosong harus mewarisi DefaultCwd workspace.
-	sd, err := svc.AddSession(ws.ID, "term 1", "", "", "")
+	sd, err := svc.AddSession(ws.ID, "term 1", "", "")
 	if err != nil {
 		t.Fatalf("AddSession: %v", err)
 	}

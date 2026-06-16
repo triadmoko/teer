@@ -28,6 +28,7 @@
     visible = true,
     wsEnv = {},
     wsCwd = "",
+    wsStartupCommand = "",
   }: {
     session: SessionDef;
     active?: boolean;
@@ -36,6 +37,7 @@
     visible?: boolean;
     wsEnv?: Record<string, string>;
     wsCwd?: string;
+    wsStartupCommand?: string;
   } = $props();
 
   let container = $state<HTMLDivElement>();
@@ -63,7 +65,7 @@
   }
 
   function startPty(_term: Terminal) {
-    return startSession(session, wsEnv, wsCwd, {
+    return startSession(session, wsEnv, wsCwd, wsStartupCommand, {
       cols: _term.cols,
       rows: _term.rows,
     });
@@ -107,13 +109,18 @@
       resizeSession(session.id, cols, rows),
     );
 
+    // Snapshot session.id sekali — id tidak pernah berubah untuk instance ini
+    // (keyed by s.id). Untrack mencegah refresh() workspace men-trigger ulang
+    // effect ini hanya karena object session baru dibuat dengan id yang sama.
+    const sid = untrack(() => session.id);
+
     // Output PTY (byte mentah) → tulis ke xterm.
-    const offOut = onSessionOutput(session.id, (bytes) => _term.write(bytes));
+    const offOut = onSessionOutput(sid, (bytes) => _term.write(bytes));
 
     // Sesi berakhir → tampilkan penanda + lapor status + aktifkan tombol restart (FR-14,15).
-    const offExit = onSessionExit(session.id, (code) => {
+    const offExit = onSessionExit(sid, (code) => {
       _term.write(`\r\n\x1b[90m[proses berakhir — kode ${code}]\x1b[0m\r\n`);
-      setRunning(session.id, false);
+      setRunning(sid, false);
       untrack(() => { exited = true; });
     });
 
@@ -128,15 +135,23 @@
       ro = _ro;
     });
 
-    startPty(_term).then(() => {
-      setRunning(session.id, true);
+    // Untrack startPty agar session/wsEnv/wsCwd/wsStartupCommand tidak menjadi
+    // dependensi effect ini — perubahan prop saat workspace refresh tidak boleh
+    // menghancurkan dan membuat ulang xterm.
+    untrack(() => startPty(_term)).then(() => {
+      setRunning(sid, true);
       untrack(() => { exited = false; });
-      if (visible) {
-        tick().then(() => {
-          refit();
-          if (active) _term.focus();
-        });
-      }
+      tick().then(() => {
+        // Fit xterm ke container, lalu eksplisit kirim dimensi ke PTY.
+        // Ini memaksa SIGWINCH ke proses PTY sehingga aplikasi (shell, vim, dll.)
+        // menggambar ulang layarnya ke xterm baru — penting saat reconnect ke PTY
+        // yang sudah berjalan (contoh: pindah workspace lalu kembali), karena PTY
+        // tidak mengirim ulang buffer layarnya secara otomatis ke subscriber baru.
+        try { _fit.fit(); } catch { /* container belum punya dimensi */ }
+        const { cols, rows } = _term;
+        if (cols > 0 && rows > 0) resizeSession(sid, cols, rows);
+        if (visible && active) _term.focus();
+      });
     });
 
     return () => {
@@ -170,12 +185,18 @@
 
   // Restart PTY saat restartCount[id] berubah (FR-15).
   $effect(() => {
-    const count = $restartCount[session.id];
+    const sid = untrack(() => session.id);
+    const count = $restartCount[sid];
     if (!count || !term) return;
     exited = false;
-    startPty(term).then(() => {
-      setRunning(session.id, true);
-      tick().then(() => refit());
+    const _t = term;
+    untrack(() => startPty(_t)).then(() => {
+      setRunning(sid, true);
+      tick().then(() => {
+        refit();
+        const { cols, rows } = _t;
+        if (cols > 0 && rows > 0) resizeSession(sid, cols, rows);
+      });
     });
   });
 
