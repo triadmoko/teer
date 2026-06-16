@@ -89,8 +89,8 @@ jobs:
           name: teer-windows-amd64
           path: bin/teer-windows-amd64.exe
 
-  build-macos-arm64:
-    name: Build macOS (arm64)
+  build-macos-universal:
+    name: Build macOS Universal (.app)
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -113,10 +113,12 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Build
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+      - name: Build arm64
         run: |
           VERSION="${{ github.ref_name }}"
-          cd frontend && npm run build && cd ..
           CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
             CGO_CFLAGS="-mmacosx-version-min=12.0" \
             CGO_LDFLAGS="-mmacosx-version-min=12.0" \
@@ -125,39 +127,9 @@ jobs:
             -ldflags="-w -s -X main.Version=${VERSION}" \
             -o bin/teer-darwin-arm64 .
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: teer-darwin-arm64
-          path: bin/teer-darwin-arm64
-
-  build-macos-amd64:
-    name: Build macOS (amd64)
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-          cache: true
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install wails3
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.82
-
-      - name: Install frontend deps
-        working-directory: frontend
-        run: npm ci
-
-      - name: Build
+      - name: Build amd64
         run: |
           VERSION="${{ github.ref_name }}"
-          cd frontend && npm run build && cd ..
           CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 \
             CGO_CFLAGS="-mmacosx-version-min=12.0" \
             CGO_LDFLAGS="-mmacosx-version-min=12.0" \
@@ -166,32 +138,8 @@ jobs:
             -ldflags="-w -s -X main.Version=${VERSION}" \
             -o bin/teer-darwin-amd64 .
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: teer-darwin-amd64
-          path: bin/teer-darwin-amd64
-
-  build-macos-universal:
-    name: Package macOS Universal (.app)
-    needs: [build-macos-arm64, build-macos-amd64]
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: teer-darwin-arm64
-          path: bin
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: teer-darwin-amd64
-          path: bin
-
       - name: Create universal binary
-        run: |
-          chmod +x bin/teer-darwin-arm64 bin/teer-darwin-amd64
-          lipo -create -output bin/teer bin/teer-darwin-arm64 bin/teer-darwin-amd64
+        run: lipo -create -output bin/teer bin/teer-darwin-arm64 bin/teer-darwin-amd64
 
       - name: Package .app bundle
         run: |
@@ -204,9 +152,7 @@ jobs:
           codesign --force --deep --sign - bin/Teer.app
 
       - name: Zip .app
-        run: |
-          cd bin
-          zip -r teer-macos-universal.zip Teer.app
+        run: cd bin && zip -r teer-macos-universal.zip Teer.app
 
       - uses: actions/upload-artifact@v4
         with:
