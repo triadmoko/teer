@@ -16,6 +16,9 @@ var Version = "dev"
 //go:embed all:frontend/dist
 var assets embed.FS
 
+//go:embed build/appicon.png
+var appIcon []byte
+
 func main() {
 	store, err := config.NewStore()
 	if err != nil {
@@ -46,6 +49,9 @@ func main() {
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,
 			TitleBar:                application.MacTitleBarHiddenInset,
+		},
+		Linux: application.LinuxWindow{
+			Icon: appIcon,
 		},
 		BackgroundColour: application.NewRGB(18, 18, 20),
 		URL:              "/",

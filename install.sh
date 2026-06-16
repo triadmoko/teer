@@ -58,6 +58,7 @@ Icon=${icon_path}
 Categories=Development;Utility;
 Terminal=false
 StartupNotify=true
+StartupWMClass=teer
 Version=1.0
 EOF
 
