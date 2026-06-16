@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { IconCopy, IconPencil, IconTrash, IconPlus } from "@tabler/icons-svelte";
+  import { IconCopy, IconSettings2, IconTrash, IconPlus } from "@tabler/icons-svelte";
   import type { Workspace } from "@domain/models";
   import {
     workspaces,
@@ -7,14 +7,55 @@
     running,
     selectWorkspace,
     createWorkspace,
-    renameWorkspace,
+    editWorkspace,
     deleteWorkspace,
     duplicateWorkspace,
-    promptDialog,
+    reorderWorkspaces,
     confirmDialog,
+    openWorkspaceSettings,
   } from "@application";
 
   const palette = ["#60a5fa", "#4ade80", "#facc15", "#f87171", "#c084fc", "#22d3ee"];
+
+  // ---- Drag-and-drop reorder (FR-6) ----
+  let dragId = $state<string | null>(null);
+  let dragOverId = $state<string | null>(null);
+
+  function onDragStart(e: DragEvent, ws: Workspace) {
+    dragId = ws.id;
+    e.dataTransfer!.effectAllowed = "move";
+  }
+
+  function onDragOver(e: DragEvent, ws: Workspace) {
+    if (dragId === ws.id) return;
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = "move";
+    dragOverId = ws.id;
+  }
+
+  function onDragLeave() {
+    dragOverId = null;
+  }
+
+  async function onDrop(e: DragEvent, ws: Workspace) {
+    e.preventDefault();
+    dragOverId = null;
+    if (!dragId || dragId === ws.id) { dragId = null; return; }
+    const list = $workspaces;
+    const fromIdx = list.findIndex((w) => w?.id === dragId);
+    const toIdx = list.findIndex((w) => w?.id === ws.id);
+    if (fromIdx === -1 || toIdx === -1) { dragId = null; return; }
+    const reordered = [...list];
+    const [item] = reordered.splice(fromIdx, 1);
+    reordered.splice(toIdx, 0, item);
+    dragId = null;
+    await reorderWorkspaces(reordered.map((w) => w.id));
+  }
+
+  function onDragEnd() {
+    dragId = null;
+    dragOverId = null;
+  }
 
   // Apakah workspace punya minimal satu sesi yang sedang berjalan (indikator titik).
   function hasRunning(ws: Workspace, run: Record<string, boolean>): boolean {
@@ -22,17 +63,16 @@
   }
 
   async function onNew() {
-    const name = await promptDialog("Nama workspace baru", "", "mis. Proyek Codemi");
-    if (!name) return;
     const color = palette[$workspaces.length % palette.length];
-    await createWorkspace(name, color, "");
+    const empty = { id: "", name: "", color, defaultCwd: "", env: {}, sessions: [], createdAt: null, updatedAt: null } as unknown;
+    const result = await openWorkspaceSettings(empty as Workspace);
+    if (!result || !result.name) return;
+    await createWorkspace(result.name, result.color || color, result.defaultCwd);
   }
 
-  async function onRename(ws: Workspace, e: MouseEvent) {
+  async function onEdit(ws: Workspace, e: MouseEvent) {
     e.stopPropagation();
-    const name = await promptDialog("Ganti nama workspace", ws.name);
-    if (!name || name === ws.name) return;
-    await renameWorkspace(ws, name);
+    await editWorkspace(ws);
   }
 
   async function onDelete(ws: Workspace, e: MouseEvent) {
@@ -66,11 +106,19 @@
         class="group flex cursor-pointer select-none items-center gap-2 rounded-lg px-[10px] py-2 {ws.id ===
         $activeWorkspaceId
           ? 'bg-active text-zinc-50'
-          : 'text-zinc-400 hover:bg-raise hover:text-zinc-200'}"
+          : 'text-zinc-400 hover:bg-raise hover:text-zinc-200'} {dragOverId === ws.id
+          ? 'ring-1 ring-blue-400'
+          : ''}"
         role="button"
         tabindex="0"
+        draggable="true"
         onclick={() => selectWorkspace(ws.id)}
         onkeydown={(e) => e.key === "Enter" && selectWorkspace(ws.id)}
+        ondragstart={(e) => onDragStart(e, ws)}
+        ondragover={(e) => onDragOver(e, ws)}
+        ondragleave={onDragLeave}
+        ondrop={(e) => onDrop(e, ws)}
+        ondragend={onDragEnd}
       >
         <span
           class="h-[9px] w-[9px] shrink-0 rounded-full"
@@ -94,8 +142,8 @@
           >
           <button
             class="cursor-pointer rounded border-none bg-transparent px-[3px] py-[2px] text-zinc-500 hover:bg-line-3 hover:text-zinc-50"
-            title="Ganti nama"
-            onclick={(e) => onRename(ws, e)}><IconPencil size={13} /></button
+            title="Pengaturan"
+            onclick={(e) => onEdit(ws, e)}><IconSettings2 size={13} /></button
           >
           <button
             class="cursor-pointer rounded border-none bg-transparent px-[3px] py-[2px] text-zinc-500 hover:bg-line-3 hover:text-zinc-50"

@@ -106,6 +106,34 @@ func (w *WorkspaceService) DeleteWorkspace(id string) error {
 	return w.repo.Save(cfg)
 }
 
+// ReorderWorkspaces mengatur ulang urutan workspace sesuai slice ids (FR-6).
+func (w *WorkspaceService) ReorderWorkspaces(ids []string) error {
+	cfg, err := w.repo.Load()
+	if err != nil {
+		return err
+	}
+	byID := make(map[string]*domain.Workspace, len(cfg.Workspaces))
+	for _, ws := range cfg.Workspaces {
+		byID[ws.ID] = ws
+	}
+	out := make([]*domain.Workspace, 0, len(cfg.Workspaces))
+	seen := make(map[string]bool, len(ids))
+	for _, id := range ids {
+		if ws, ok := byID[id]; ok {
+			out = append(out, ws)
+			seen[id] = true
+		}
+	}
+	// Workspace yang tidak ada dalam ids tetap ditambahkan di akhir.
+	for _, ws := range cfg.Workspaces {
+		if !seen[ws.ID] {
+			out = append(out, ws)
+		}
+	}
+	cfg.Workspaces = out
+	return w.repo.Save(cfg)
+}
+
 // DuplicateWorkspace menyalin workspace beserta definisi sesinya (FR-5).
 // Id baru di-generate untuk workspace dan tiap sesi; tidak ada PTY yang dibuat.
 func (w *WorkspaceService) DuplicateWorkspace(id string) (*domain.Workspace, error) {

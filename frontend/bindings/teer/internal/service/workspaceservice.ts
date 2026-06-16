@@ -67,6 +67,13 @@ export function ListWorkspaces(): $CancellablePromise<(domain$0.Workspace | null
 }
 
 /**
+ * ReorderWorkspaces mengatur ulang urutan workspace sesuai slice ids (FR-6).
+ */
+export function ReorderWorkspaces(ids: string[]): $CancellablePromise<void> {
+    return $Call.ByID(2064324940, ids);
+}
+
+/**
  * UpdateSession menyimpan perubahan definisi sesi (rename, env, autoStart, dll).
  */
 export function UpdateSession(updated: domain$0.SessionDef | null): $CancellablePromise<void> {

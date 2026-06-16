@@ -1,8 +1,11 @@
 // Lapisan aplikasi: use case I/O terminal aktif (dipakai komponen Terminal).
 // Menjembatani xterm di presentation dengan adapter PTY di infrastructure.
 
+import { get } from "svelte/store";
 import { mergeEnv, type SessionDef } from "@domain/models";
 import { sessionGateway, terminalTransport } from "@infrastructure/wails";
+import { opened } from "./stores";
+export { broadcastMode } from "./stores";
 
 /** Bangkitkan PTY untuk sesi dengan env workspace+sesi tergabung (FR-13/18). */
 export function startSession(
@@ -38,6 +41,13 @@ export const onSessionOutput = (
   id: string,
   cb: (bytes: Uint8Array) => void,
 ): (() => void) => terminalTransport.onOutput(id, cb);
+
+/** Kirim input yang sama ke semua sesi yang sedang terbuka (FR-16). */
+export function broadcastWrite(data: string): void {
+  for (const id of get(opened)) {
+    sessionGateway.write(id, data);
+  }
+}
 
 /** Berlangganan event berakhirnya proses sesi. */
 export const onSessionExit = (

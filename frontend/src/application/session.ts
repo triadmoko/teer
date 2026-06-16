@@ -1,22 +1,29 @@
 // Lapisan aplikasi: use case sesi terminal (tambah, pilih, rename, tutup).
 
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { sessionsOf, type SessionDef } from "@domain/models";
 import { workspaceRepository, sessionGateway } from "@infrastructure/wails";
 import { workspaces, activeSessionId, running } from "./stores";
 import { open, closeOpened } from "./opened";
 import { refresh } from "./workspace";
+import { openSessionForm } from "./sessionFormDialog";
+
+export { sessionFormDialog } from "./sessionFormDialog";
 
 export async function addSession(workspaceId: string): Promise<void> {
   const ws = get(workspaces).find((w) => w?.id === workspaceId) ?? null;
-  const name = `terminal ${sessionsOf(ws).length + 1}`;
+  const form = await openSessionForm(ws?.defaultCwd ?? "");
+  if (!form) return;
   const sd = await workspaceRepository.addSession(
     workspaceId,
-    name,
-    "",
-    ws?.defaultCwd ?? "",
-    "",
+    form.name,
+    form.shell,
+    form.cwd,
+    form.startupCommand,
   );
+  if (sd && form.autoStart) {
+    await workspaceRepository.updateSession({ ...sd, autoStart: true } as SessionDef);
+  }
   await refresh();
   if (sd) selectSession(sd.id);
 }
@@ -54,4 +61,15 @@ export function setRunning(id: string, isRunning: boolean): void {
     else delete n[id];
     return n;
   });
+}
+
+/**
+ * Tandai sesi untuk di-restart. Sesi yang exited bisa spawn PTY baru
+ * dengan definisi yang sama — dipicu dari UI oleh komponen Terminal (FR-15).
+ * Komponen Terminal mendeteksi perubahan `restartCount` dan memanggil startPty.
+ */
+export const restartCount = writable<Record<string, number>>({});
+
+export function restartSession(id: string): void {
+  restartCount.update((m) => ({ ...m, [id]: (m[id] ?? 0) + 1 }));
 }

@@ -38,6 +38,7 @@ func main() {
 	// WorkspaceService menerima store sebagai domain.Repository.
 	app.RegisterService(application.NewService(service.NewSessionService(app.Event)))
 	app.RegisterService(application.NewService(service.NewWorkspaceService(store)))
+	app.RegisterService(application.NewService(service.NewDialogService()))
 
 	app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Title:  "teer",

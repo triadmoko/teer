@@ -1,5 +1,6 @@
 <script lang="ts">
   import { tick, untrack } from "svelte";
+  import { get } from "svelte/store";
   import { Terminal } from "@xterm/xterm";
   import { FitAddon } from "@xterm/addon-fit";
   import { SearchAddon } from "@xterm/addon-search";
@@ -13,6 +14,12 @@
     onSessionOutput,
     onSessionExit,
     setRunning,
+    restartCount,
+    broadcastMode,
+    broadcastWrite,
+    terminalFontSize,
+    terminalFontFamily,
+    terminalTheme,
   } from "@application";
 
   let {
@@ -38,23 +45,8 @@
   let cleanups = $state<Array<() => void>>([]);
   let ro = $state<ResizeObserver | undefined>();
   let fitTimer = $state<ReturnType<typeof setTimeout> | undefined>();
-
-  // Tema gelap default mengikuti estetika developer tool (PRD §9).
-  const theme = {
-    background: "#121214",
-    foreground: "#d4d4d8",
-    cursor: "#e4e4e7",
-    selectionBackground: "#3f3f46",
-    black: "#18181b",
-    red: "#f87171",
-    green: "#4ade80",
-    yellow: "#facc15",
-    blue: "#60a5fa",
-    magenta: "#c084fc",
-    cyan: "#22d3ee",
-    white: "#d4d4d8",
-    brightBlack: "#52525b",
-  };
+  // Lacak apakah sesi masih exited (belum di-restart) untuk tampilkan tombol restart.
+  let exited = $state(false);
 
   // Debounce fit untuk menghindari resize race saat container berubah cepat
   // (PRD §11: resize PTY saat output streaming).
@@ -83,11 +75,11 @@
     if (!el) return;
 
     const _term = new Terminal({
-      fontFamily: 'ui-monospace, "Cascadia Code", "JetBrains Mono", Menlo, monospace',
-      fontSize: 13,
+      fontFamily: untrack(() => get(terminalFontFamily)),
+      fontSize: untrack(() => get(terminalFontSize)),
       cursorBlink: true,
       scrollback: 5000, // batas sesuai PRD NFR-1 / §11
-      theme,
+      theme: untrack(() => get(terminalTheme)),
       allowProposedApi: true,
     });
     const _fit = new FitAddon();
@@ -104,7 +96,11 @@
     }
 
     // Input keyboard/paste → stdin shell (FR-18).
-    const onData = _term.onData((data) => writeSession(session.id, data));
+    // Bila broadcast aktif (FR-16), kirim ke semua sesi yang terbuka.
+    const onData = _term.onData((data) => {
+      if (get(broadcastMode)) broadcastWrite(data);
+      else writeSession(session.id, data);
+    });
 
     // xterm resize → PTY resize (FR-17).
     const onResize = _term.onResize(({ cols, rows }) =>
@@ -114,10 +110,11 @@
     // Output PTY (byte mentah) → tulis ke xterm.
     const offOut = onSessionOutput(session.id, (bytes) => _term.write(bytes));
 
-    // Sesi berakhir → tampilkan penanda + lapor status (FR-14).
+    // Sesi berakhir → tampilkan penanda + lapor status + aktifkan tombol restart (FR-14,15).
     const offExit = onSessionExit(session.id, (code) => {
       _term.write(`\r\n\x1b[90m[proses berakhir — kode ${code}]\x1b[0m\r\n`);
       setRunning(session.id, false);
+      untrack(() => { exited = true; });
     });
 
     const _ro = new ResizeObserver(() => refit());
@@ -133,6 +130,7 @@
 
     startPty(_term).then(() => {
       setRunning(session.id, true);
+      untrack(() => { exited = false; });
       if (visible) {
         tick().then(() => {
           refit();
@@ -168,6 +166,29 @@
     if (active && visible && term) {
       tick().then(() => term?.focus());
     }
+  });
+
+  // Restart PTY saat restartCount[id] berubah (FR-15).
+  $effect(() => {
+    const count = $restartCount[session.id];
+    if (!count || !term) return;
+    exited = false;
+    startPty(term).then(() => {
+      setRunning(session.id, true);
+      tick().then(() => refit());
+    });
+  });
+
+  // Terapkan perubahan pengaturan font/tema ke instance xterm yang sudah ada (FR-20).
+  $effect(() => {
+    const size = $terminalFontSize;
+    const family = $terminalFontFamily;
+    const th = $terminalTheme;
+    if (!term) return;
+    term.options.fontSize = size;
+    term.options.fontFamily = family;
+    term.options.theme = th;
+    tick().then(() => refit());
   });
 
   /** Dipanggil parent untuk mencari teks di scrollback (FR-19). */

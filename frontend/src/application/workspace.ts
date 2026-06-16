@@ -11,6 +11,9 @@ import {
   running,
 } from "./stores";
 import { open, closeOpened } from "./opened";
+import { openWorkspaceSettings } from "./workspaceSettingsDialog";
+
+export { workspaceSettingsDialog } from "./workspaceSettingsDialog";
 
 // ---- Bootstrap & refresh ----
 
@@ -103,5 +106,25 @@ export async function deleteWorkspace(id: string): Promise<void> {
 
 export async function duplicateWorkspace(id: string): Promise<void> {
   await workspaceRepository.duplicate(id);
+  await refresh();
+}
+
+/** Atur ulang urutan workspace sesuai ids baru (FR-6). */
+export async function reorderWorkspaces(ids: string[]): Promise<void> {
+  await workspaceRepository.reorder(ids);
+  await refresh();
+}
+
+/** Buka dialog pengaturan workspace lengkap (nama, warna, cwd, env). */
+export async function editWorkspace(ws: Workspace): Promise<void> {
+  const result = await openWorkspaceSettings(ws);
+  if (!result) return;
+  await workspaceRepository.update({
+    ...ws,
+    name: result.name,
+    color: result.color,
+    defaultCwd: result.defaultCwd,
+    env: result.env,
+  } as Workspace);
   await refresh();
 }

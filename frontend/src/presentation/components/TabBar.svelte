@@ -1,5 +1,8 @@
 <script lang="ts">
-  import { IconX, IconPlus, IconRectangle, IconLayoutGrid } from "@tabler/icons-svelte";
+  import {
+    IconX, IconPlus, IconRectangle, IconLayoutGrid, IconRefresh,
+    IconBroadcast, IconSettings,
+  } from "@tabler/icons-svelte";
   import type { SessionDef } from "@domain/models";
   import { COL_CHOICES } from "@domain/layout";
   import {
@@ -9,8 +12,11 @@
     addSession,
     renameSession,
     closeSession,
+    restartSession,
     layoutMode,
     gridCols,
+    broadcastMode,
+    openTerminalSettings,
     promptDialog,
     confirmDialog,
   } from "@application";
@@ -64,6 +70,13 @@
             class="max-w-40 overflow-hidden text-ellipsis"
             title="dobel-klik untuk ganti nama">{s.name}</span
           >
+          {#if !$running[s.id]}
+            <button
+              class="flex cursor-pointer items-center rounded border-none bg-transparent px-[2px] text-zinc-500 hover:bg-zinc-700 hover:text-green-400"
+              title="Restart"
+              onclick={(e) => { e.stopPropagation(); restartSession(s.id); }}
+            ><IconRefresh size={12} /></button>
+          {/if}
           <button
             class="flex cursor-pointer items-center rounded border-none bg-transparent px-[2px] text-zinc-500 hover:bg-zinc-700 hover:text-zinc-50"
             title="Tutup"
@@ -80,6 +93,19 @@
   </div>
 
   <div class="flex shrink-0 items-center gap-[2px] border-l border-line px-2">
+    <!-- Broadcast toggle (FR-16) -->
+    <button
+      class="flex min-w-[26px] cursor-pointer items-center justify-center rounded-[5px] border px-[7px] py-1 {$broadcastMode
+        ? 'border-orange-500 bg-orange-500/20 text-orange-300'
+        : 'border-transparent bg-transparent text-zinc-400 hover:bg-raise hover:text-zinc-50'}"
+      title={$broadcastMode ? 'Broadcast aktif — klik untuk nonaktifkan' : 'Broadcast input ke semua terminal (FR-16)'}
+      aria-label="Toggle broadcast input"
+      onclick={() => broadcastMode.update((v) => !v)}
+    ><IconBroadcast size={14} /></button>
+
+    <span class="mx-1 h-[18px] w-px bg-line"></span>
+
+    <!-- Layout: tabs / grid -->
     <button
       class="flex min-w-[26px] cursor-pointer items-center justify-center rounded-[5px] border px-[7px] py-1 {$layoutMode ===
       'tabs'
@@ -111,5 +137,15 @@
         >
       {/each}
     {/if}
+
+    <span class="mx-1 h-[18px] w-px bg-line"></span>
+
+    <!-- Terminal settings (FR-20) -->
+    <button
+      class="flex min-w-[26px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent px-[7px] py-1 text-zinc-400 hover:bg-raise hover:text-zinc-50"
+      title="Pengaturan terminal (font, tema)"
+      aria-label="Pengaturan terminal"
+      onclick={openTerminalSettings}
+    ><IconSettings size={14} /></button>
   </div>
 </div>

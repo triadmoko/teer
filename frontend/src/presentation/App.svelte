@@ -4,15 +4,22 @@
   import Dialog from "./components/Dialog.svelte";
   import ErrorBanner from "./components/ErrorBanner.svelte";
   import TerminalStage from "./components/TerminalStage.svelte";
+  import SessionFormDialog from "./components/SessionFormDialog.svelte";
+  import WorkspaceSettingsDialog from "./components/WorkspaceSettingsDialog.svelte";
+  import TerminalSettingsDialog from "./components/TerminalSettingsDialog.svelte";
+  import CommandPalette from "./components/CommandPalette.svelte";
   import { sessionsOf } from "@domain/models";
   import {
     init,
     activeWorkspace,
     activeSessionId,
+    workspaces,
     opened,
     addSession,
     selectSession,
+    selectWorkspace,
     closeSession,
+    openCommandPalette,
   } from "@application";
 
   $effect(() => {
@@ -25,9 +32,24 @@
   const awEnv = $derived((aw?.env ?? {}) as Record<string, string>);
   const awCwd = $derived(aw?.defaultCwd ?? "");
 
-  // Shortcut keyboard dasar (FR-23): Ctrl+T terminal baru, Ctrl+W tutup,
-  // Ctrl+Tab pindah tab.
+  // Shortcut keyboard (FR-23):
+  // Terminal: Ctrl+T baru, Ctrl+W tutup, Ctrl+Tab pindah tab.
+  // Workspace: Ctrl+Shift+1..9 aktifkan workspace ke-N.
   function onKey(e: KeyboardEvent) {
+    // Command palette (FR-24): Ctrl+Shift+P.
+    if (e.ctrlKey && e.shiftKey && (e.key === "p" || e.key === "P")) {
+      e.preventDefault();
+      openCommandPalette();
+      return;
+    }
+    // Pindah workspace ke-N (Ctrl+Shift+1..9).
+    if (e.ctrlKey && e.shiftKey && e.key >= "1" && e.key <= "9") {
+      e.preventDefault();
+      const idx = parseInt(e.key) - 1;
+      const ws = $workspaces[idx];
+      if (ws) selectWorkspace(ws.id);
+      return;
+    }
     if (!aw) return;
     if (e.ctrlKey && (e.key === "t" || e.key === "T")) {
       e.preventDefault();
@@ -50,6 +72,10 @@
 
 <Dialog />
 <ErrorBanner />
+<SessionFormDialog />
+<WorkspaceSettingsDialog />
+<TerminalSettingsDialog />
+<CommandPalette />
 
 <div class="flex h-screen w-screen overflow-hidden">
   <Sidebar />

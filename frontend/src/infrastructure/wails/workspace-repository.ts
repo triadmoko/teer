@@ -2,6 +2,7 @@
 // Membungkus WorkspaceService (binding RPC Go) di balik antarmuka yang bersih.
 
 import { WorkspaceService } from "@bindings/teer/internal/service";
+import { Call } from "@wailsio/runtime";
 import type { Workspace, SessionDef } from "@domain/models";
 
 export const workspaceRepository = {
@@ -28,4 +29,9 @@ export const workspaceRepository = {
 
   deleteSession: (workspaceId: string, sessionId: string) =>
     WorkspaceService.DeleteSession(workspaceId, sessionId),
+
+  // ReorderWorkspaces belum ada di generated binding — panggil via ByName.
+  // Binding akan ter-generate ulang saat `wails dev`/`wails build` dijalankan.
+  reorder: (ids: string[]): Promise<void> =>
+    Call.ByName("teer/internal/service.WorkspaceService.ReorderWorkspaces", ids),
 };

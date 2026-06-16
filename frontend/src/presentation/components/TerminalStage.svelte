@@ -1,5 +1,14 @@
 <script lang="ts">
-  import { IconMaximize, IconMinimize, IconX } from "@tabler/icons-svelte";
+  import { tick } from "svelte";
+  import {
+    IconMaximize,
+    IconMinimize,
+    IconX,
+    IconSearch,
+    IconChevronUp,
+    IconChevronDown,
+    IconRefresh,
+  } from "@tabler/icons-svelte";
   import type { SessionDef } from "@domain/models";
   import {
     activeSessionId,
@@ -12,6 +21,7 @@
     selectSession,
     renameSession,
     closeSession,
+    restartSession,
     promptDialog,
     confirmDialog,
   } from "@application";
@@ -29,9 +39,53 @@
     awCwd: string;
   } = $props();
 
+  // Referensi ke instance Terminal per sesi untuk memanggil find() (FR-19).
+  let terminalRefs = $state<Record<string, { find: (q: string, next?: boolean) => void }>>({});
+
+  // State search bar (FR-19).
+  let searchOpen = $state(false);
+  let searchQuery = $state("");
+  let searchInput = $state<HTMLInputElement | undefined>();
+
+  function openSearch() {
+    searchOpen = true;
+    tick().then(() => searchInput?.focus());
+  }
+
+  function closeSearch() {
+    searchOpen = false;
+    searchQuery = "";
+  }
+
+  function doFind(next = true) {
+    if (!searchQuery) return;
+    const ref = terminalRefs[$activeSessionId ?? ""];
+    ref?.find(searchQuery, next);
+  }
+
+  function onSearchKey(e: KeyboardEvent) {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      closeSearch();
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      doFind(!e.shiftKey);
+    }
+  }
+
+  // Ctrl+F toggle search (FR-19). Xterm.js preventDefault Ctrl+F di dalam
+  // terminal, tapi kita tangkap di level window sebagai fallback.
+  function onWindowKey(e: KeyboardEvent) {
+    if (e.ctrlKey && e.key === "f") {
+      e.preventDefault();
+      if (searchOpen) closeSearch();
+      else openSearch();
+    }
+  }
+
   // Drag tepi bawah window grid untuk mengubah tinggi baris (semua baris grid
-  // seragam, jadi menarik satu window menyetel tinggi grid). Pointer capture
-  // memastikan event tetap diterima walau kursor melintas di atas xterm.
+  // seragam). Pointer capture memastikan event tetap diterima walau kursor
+  // melintas di atas xterm.
   let resizing = $state(false);
 
   function startResize(e: PointerEvent) {
@@ -55,7 +109,6 @@
     el.addEventListener("pointerup", up);
   }
 
-  // Rename / tutup terminal langsung dari header window grid (mirror TabBar).
   async function renameFromCell(s: SessionDef, e: Event) {
     e.stopPropagation();
     const name = await promptDialog("Ganti nama terminal", s.name);
@@ -81,11 +134,12 @@
     selectSession(s.id);
   }
 
-  // Reset fullscreen saat keluar dari mode grid.
   $effect(() => {
     if ($layoutMode !== "grid") fullscreenSessionId.set(null);
   });
 </script>
+
+<svelte:window onkeydown={onWindowKey} />
 
 <div
   class="relative min-h-0 flex-1 {$layoutMode === 'grid'
@@ -94,6 +148,39 @@
   style:--cols={$gridCols}
   style:--rowH={`${$gridRowH}px`}
 >
+  <!-- Search bar overlay (FR-19) — hanya mode tabs agar tidak tumpang tindih grid header -->
+  {#if searchOpen && $layoutMode !== "grid"}
+    <div
+      class="absolute right-3 top-2 z-50 flex items-center gap-1 rounded-lg border border-zinc-700 bg-elevated px-2 py-1 shadow-lg"
+    >
+      <IconSearch size={13} class="shrink-0 text-zinc-400" />
+      <input
+        bind:this={searchInput}
+        bind:value={searchQuery}
+        class="w-[200px] bg-transparent text-[13px] text-zinc-50 outline-none placeholder:text-zinc-600"
+        placeholder="Cari di terminal…"
+        type="text"
+        onkeydown={onSearchKey}
+        oninput={() => doFind(true)}
+      />
+      <button
+        class="flex cursor-pointer items-center rounded border-none bg-transparent px-1 text-zinc-400 hover:text-zinc-50"
+        title="Sebelumnya (Shift+Enter)"
+        onclick={() => doFind(false)}><IconChevronUp size={13} /></button
+      >
+      <button
+        class="flex cursor-pointer items-center rounded border-none bg-transparent px-1 text-zinc-400 hover:text-zinc-50"
+        title="Berikutnya (Enter)"
+        onclick={() => doFind(true)}><IconChevronDown size={13} /></button
+      >
+      <button
+        class="flex cursor-pointer items-center rounded border-none bg-transparent px-1 text-zinc-500 hover:text-red-400"
+        title="Tutup (Escape)"
+        onclick={closeSearch}><IconX size={13} /></button
+      >
+    </div>
+  {/if}
+
   {#if $layoutMode === "grid"}
     {#each openSessions as s (s.id)}
       {@const isFs = $fullscreenSessionId === s.id}
@@ -124,18 +211,27 @@
             class="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
             >{s.name}</span
           >
+          {#if !$running[s.id]}
+            <button
+              class="flex shrink-0 cursor-pointer items-center rounded border-none bg-transparent px-1 leading-none text-zinc-500 hover:bg-zinc-700 hover:text-green-400"
+              title="Restart"
+              onclick={(e) => { e.stopPropagation(); restartSession(s.id); }}
+            ><IconRefresh size={12} /></button>
+          {/if}
           <button
             class="flex shrink-0 cursor-pointer items-center rounded border-none bg-transparent px-1 leading-none text-zinc-500 hover:bg-zinc-700 hover:text-zinc-50"
             title={isFs ? "Kembalikan ukuran" : "Layar penuh"}
-            aria-label={isFs ? "Kembalikan ukuran terminal" : "Perluas terminal layar penuh"}
-            onclick={(e) => toggleFullscreen(s, e)}>
+            aria-label={isFs
+              ? "Kembalikan ukuran terminal"
+              : "Perluas terminal layar penuh"}
+            onclick={(e) => toggleFullscreen(s, e)}
+          >
             {#if isFs}
               <IconMinimize size={12} />
             {:else}
               <IconMaximize size={12} />
             {/if}
-          </button
-          >
+          </button>
           <button
             class="flex shrink-0 cursor-pointer items-center rounded border-none bg-transparent px-1 leading-none text-zinc-500 hover:bg-zinc-700 hover:text-zinc-50"
             title="Tutup"
@@ -154,6 +250,7 @@
             visible={true}
             wsEnv={awEnv}
             wsCwd={awCwd}
+            bind:this={terminalRefs[s.id]}
           />
         </div>
         <div
@@ -175,6 +272,7 @@
         visible={s.id === $activeSessionId}
         wsEnv={awEnv}
         wsCwd={awCwd}
+        bind:this={terminalRefs[s.id]}
       />
     {/each}
   {/if}
