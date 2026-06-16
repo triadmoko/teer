@@ -4,11 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build:dev": "vite build --minify false --mode development",
+    "dev": "vite dev",
+    "build:dev": "vite build --mode development",
     "build": "vite build --mode production",
     "preview": "vite preview",
-    "check": "svelte-check --tsconfig ./tsconfig.json"
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "prepare": "svelte-kit sync"
   },
   "dependencies": {
     "@tabler/icons-svelte": "^3.44.0",
@@ -21,8 +22,10 @@
     "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
+    "@sveltejs/adapter-static": "^3.0.10",
+    "@sveltejs/kit": "^2.65.1",
     "@sveltejs/vite-plugin-svelte": "^5.1.1",
-    "@tsconfig/svelte": "^5.0.8",
+    "@types/node": "^22.19.21",
     "svelte": "^5.56.3",
     "svelte-check": "^4.6.0",
     "tslib": "^2.6.2",

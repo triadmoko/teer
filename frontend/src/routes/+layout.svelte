@@ -1,18 +1,22 @@
 <script lang="ts">
-  import Sidebar from "./components/Sidebar.svelte";
-  import TabBar from "./components/TabBar.svelte";
-  import Dialog from "./components/Dialog.svelte";
-  import ErrorBanner from "./components/ErrorBanner.svelte";
-  import TerminalStage from "./components/TerminalStage.svelte";
-  import SessionFormDialog from "./components/SessionFormDialog.svelte";
-  import WorkspaceSettingsDialog from "./components/WorkspaceSettingsDialog.svelte";
-  import TerminalSettingsDialog from "./components/TerminalSettingsDialog.svelte";
-  import CommandPalette from "./components/CommandPalette.svelte";
-  import UpdateNotification from "./components/UpdateNotification.svelte";
-  import { sessionsOf } from "@domain/models";
+  import "../app.css";
+  import { page } from "$app/stores";
+  import { goto } from "$app/navigation";
+  import Sidebar from "@presentation/components/Sidebar.svelte";
+  import TabBar from "@presentation/components/TabBar.svelte";
+  import Dialog from "@presentation/components/Dialog.svelte";
+  import ErrorBanner from "@presentation/components/ErrorBanner.svelte";
+  import TerminalStage from "@presentation/components/TerminalStage.svelte";
+  import SessionFormDialog from "@presentation/components/SessionFormDialog.svelte";
+  import WorkspaceSettingsDialog from "@presentation/components/WorkspaceSettingsDialog.svelte";
+  import TerminalSettingsDialog from "@presentation/components/TerminalSettingsDialog.svelte";
+  import CommandPalette from "@presentation/components/CommandPalette.svelte";
+  import UpdateNotification from "@presentation/components/UpdateNotification.svelte";
+  import { sessionsOf, type SessionDef } from "@domain/models";
   import {
     init,
     activeWorkspace,
+    activeWorkspaceId,
     activeSessionId,
     workspaces,
     opened,
@@ -24,6 +28,15 @@
     checkUpdate,
     listenUpdateProgress,
   } from "@application";
+
+  let { children } = $props();
+
+  type OpenEntry = {
+    s: SessionDef;
+    wsEnv: Record<string, string>;
+    wsCwd: string;
+    wsStartupCommand: string;
+  };
 
   $effect(() => {
     init();
@@ -38,13 +51,39 @@
   const awCwd = $derived(aw?.defaultCwd ?? "");
   const awStartupCommand = $derived(aw?.startupCommand ?? "");
 
-        function onKey(e: KeyboardEvent) {
-        if (e.ctrlKey && e.shiftKey && (e.key === "p" || e.key === "P")) {
+  // Semua sessions dari SEMUA workspace yang sudah dibuka — supaya Terminal
+  // components tetap hidup saat switch workspace (preserves xterm scrollback).
+  const allOpenSessions = $derived<OpenEntry[]>(
+    $workspaces.flatMap((ws) => {
+      const wsEnv = (ws.env ?? {}) as Record<string, string>;
+      const wsCwd = ws.defaultCwd ?? "";
+      const wsStartupCommand = ws.startupCommand ?? "";
+      return sessionsOf(ws)
+        .filter((s) => $opened.has(s.id))
+        .map((s) => ({ s, wsEnv, wsCwd, wsStartupCommand }));
+    }),
+  );
+
+  // Sinkron store -> URL: saat activeWorkspaceId berubah (klik sidebar,
+  // shortcut), mirror ke route. Diff-guard cegah loop dengan +page.svelte.
+  $effect(() => {
+    const id = $activeWorkspaceId;
+    if (id && $page.params.id !== id) {
+      goto("/workspace/" + id, {
+        replaceState: true,
+        keepFocus: true,
+        noScroll: true,
+      });
+    }
+  });
+
+  function onKey(e: KeyboardEvent) {
+    if (e.ctrlKey && e.shiftKey && (e.key === "p" || e.key === "P")) {
       e.preventDefault();
       openCommandPalette();
       return;
     }
-        if (e.ctrlKey && e.shiftKey && e.key >= "1" && e.key <= "9") {
+    if (e.ctrlKey && e.shiftKey && e.key >= "1" && e.key <= "9") {
       e.preventDefault();
       const idx = parseInt(e.key) - 1;
       const ws = $workspaces[idx];
@@ -86,6 +125,7 @@
       <TabBar workspaceId={aw.id} sessions={allSessions} />
       <TerminalStage
         {openSessions}
+        {allOpenSessions}
         allSessionsCount={allSessions.length}
         {awEnv}
         {awCwd}
@@ -100,3 +140,5 @@
     {/if}
   </main>
 </div>
+
+{@render children()}

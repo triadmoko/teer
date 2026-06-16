@@ -27,14 +27,23 @@
   } from "@application";
   import Terminal from "./Terminal.svelte";
 
+  type OpenEntry = {
+    s: SessionDef;
+    wsEnv: Record<string, string>;
+    wsCwd: string;
+    wsStartupCommand: string;
+  };
+
   let {
     openSessions,
+    allOpenSessions,
     allSessionsCount,
     awEnv,
     awCwd,
     awStartupCommand = "",
   }: {
     openSessions: SessionDef[];
+    allOpenSessions: OpenEntry[];
     allSessionsCount: number;
     awEnv: Record<string, string>;
     awCwd: string;
@@ -261,15 +270,15 @@
       </div>
     {/each}
   {:else}
-    {#each openSessions as s (s.id)}
+    {#each allOpenSessions as entry (entry.s.id)}
       <Terminal
-        session={s}
-        active={s.id === $activeSessionId}
-        visible={s.id === $activeSessionId}
-        wsEnv={awEnv}
-        wsCwd={awCwd}
-        wsStartupCommand={awStartupCommand}
-        bind:this={terminalRefs[s.id]}
+        session={entry.s}
+        active={entry.s.id === $activeSessionId}
+        visible={entry.s.id === $activeSessionId}
+        wsEnv={entry.wsEnv}
+        wsCwd={entry.wsCwd}
+        wsStartupCommand={entry.wsStartupCommand}
+        bind:this={terminalRefs[entry.s.id]}
       />
     {/each}
   {/if}

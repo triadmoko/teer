@@ -41,7 +41,7 @@ body {
   user-select: none;
 }
 
-#app {
+body > div {
   height: 100%;
 }
 

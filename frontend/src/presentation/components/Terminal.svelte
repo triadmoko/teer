@@ -50,9 +50,10 @@
       function refit() {
     if (fitTimer) clearTimeout(fitTimer);
     fitTimer = setTimeout(() => {
-      if (!visible || !fit) return;
+      if (!fit || !term) return;
       try {
         fit.fit();
+        term.refresh(0, term.rows - 1);
       } catch {
 
       }
@@ -149,7 +150,10 @@
 
     $effect(() => {
     if (visible && term) {
-      tick().then(() => refit());
+      tick().then(() => {
+        refit();
+        term?.refresh(0, (term?.rows ?? 1) - 1);
+      });
     }
   });
 
@@ -195,7 +199,9 @@
 </script>
 
 <div
-  class="absolute inset-0 px-2 py-[6px] {visible ? 'block' : 'hidden'}"
+  class="absolute inset-0 px-2 py-[6px]"
+  class:invisible={!visible}
+  class:pointer-events-none={!visible}
   bind:this={container}
 ></div>
 
