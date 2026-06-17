@@ -4,9 +4,8 @@
 
 > Built with [Wails v3](https://v3.wails.io/) (Go + Svelte + TypeScript)
 
-Platform Go Status
 
-Teer demo — workspace sidebar with grid terminal layout
+![Teer demo — workspace sidebar with grid terminal layout](./assets/teer-demo.png)
 
 ---
 
