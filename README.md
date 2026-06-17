@@ -60,8 +60,10 @@ curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/install.sh | ba
 Or install a specific version:
 
 ```bash
-TEER_VERSION=v0.1.0 curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/install.sh | TEER_VERSION=v0.1.0 bash
 ```
+
+> **Note:** Put `TEER_VERSION` before `bash`, not before `curl`. In a pipe, the env var must be set on the process that runs the script (`bash`), otherwise the installer falls back to the GitHub `releases/latest` API.
 
 **Linux system dependency** (required for WebKit):
 
@@ -94,7 +96,7 @@ curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.sh | 
 Hapus config juga:
 
 ```bash
-TEER_PURGE_CONFIG=1 curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.sh | TEER_PURGE_CONFIG=1 bash
 ```
 
 **Windows** (PowerShell):
