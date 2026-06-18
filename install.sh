@@ -3,7 +3,8 @@ set -euo pipefail
 
 REPO="triadmoko/teer"
 BIN_NAME="teer"
-INSTALL_DIR="/usr/local/bin"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
+LEGACY_DIR="/usr/local/bin"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -92,6 +93,30 @@ install_macos_desktop() {
   fi
 }
 
+# --- parse args (alternatif dari env TEER_VERSION; aman saat di-pipe via `bash -s --`) ---
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -v|--version)
+      [ -n "${2:-}" ] || error "Opsi $1 butuh argumen versi, mis. --version v0.1.0"
+      TEER_VERSION="$2"
+      shift 2
+      ;;
+    --version=*)
+      TEER_VERSION="${1#*=}"
+      shift
+      ;;
+    -h|--help)
+      echo "Usage: install.sh [--version <tag>]"
+      echo "  --version, -v <tag>   Pasang versi tertentu (mis. v0.1.0)"
+      echo "  Bisa juga lewat env: TEER_VERSION=v0.1.0"
+      exit 0
+      ;;
+    *)
+      error "Argumen tidak dikenal: $1"
+      ;;
+  esac
+done
+
 # --- detect OS/arch ---
 OS="$(uname -s)"
 ARCH="$(uname -m)"
@@ -172,13 +197,25 @@ if [ "$IS_ZIP" = "true" ]; then
   install_macos_desktop
 else
   chmod +x "$TMP_FILE"
-  if [ -w "$INSTALL_DIR" ]; then
-    mv "$TMP_FILE" "${INSTALL_DIR}/${BIN_NAME}"
-  else
-    warn "Need sudo to write to $INSTALL_DIR"
-    sudo mv "$TMP_FILE" "${INSTALL_DIR}/${BIN_NAME}"
-  fi
+  mkdir -p "$INSTALL_DIR"
+  # Hapus binary lama (termasuk di lokasi legacy) agar tidak "Text file busy"
+  rm -f "${INSTALL_DIR}/${BIN_NAME}"
+  [ -f "${LEGACY_DIR}/${BIN_NAME}" ] && sudo rm -f "${LEGACY_DIR}/${BIN_NAME}" && \
+    info "Binary lama di $LEGACY_DIR dihapus (migrasi ke $INSTALL_DIR)"
+  mv "$TMP_FILE" "${INSTALL_DIR}/${BIN_NAME}"
   info "Installed at ${INSTALL_DIR}/${BIN_NAME}"
+
+  # Pastikan INSTALL_DIR ada di PATH
+  if [[ ":$PATH:" != *":$INSTALL_DIR:"* ]]; then
+    for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
+      if [ -f "$rc" ] && ! grep -qF "$INSTALL_DIR" "$rc"; then
+        echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> "$rc"
+        info "PATH ditambahkan ke $rc"
+      fi
+    done
+    warn "PATH diperbarui. Buka terminal baru atau jalankan: source ~/.bashrc"
+  fi
+
   install_linux_desktop
 fi
 

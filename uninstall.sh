@@ -2,7 +2,8 @@
 set -euo pipefail
 
 BIN_NAME="teer"
-INSTALL_DIR="/usr/local/bin"
+INSTALL_DIR="${INSTALL_DIR:-$HOME/.local/bin}"
+LEGACY_DIR="/usr/local/bin"
 APP_DEST="/Applications/Teer.app"
 
 RED='\033[0;31m'
@@ -44,7 +45,9 @@ uninstall_linux() {
   local user_desktop
   user_desktop="$(desktop_dir)"
 
+  # Hapus dari lokasi baru maupun lokasi lama (migrasi dari /usr/local/bin)
   remove_path "${INSTALL_DIR}/${BIN_NAME}"
+  remove_path "${LEGACY_DIR}/${BIN_NAME}"
   remove_path "$apps_dir/teer.desktop"
   remove_path "$user_desktop/teer.desktop"
   remove_path "$icons_dir/teer.png"
@@ -66,6 +69,7 @@ uninstall_macos() {
   fi
 
   remove_path "${INSTALL_DIR}/${BIN_NAME}"
+  remove_path "${LEGACY_DIR}/${BIN_NAME}"
   remove_path "$APP_DEST"
 }
 
@@ -73,6 +77,25 @@ purge_config() {
   local config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/teer"
   remove_path "$config_dir"
 }
+
+# --- parse args (alternatif dari env TEER_PURGE_CONFIG; aman saat di-pipe via `bash -s --`) ---
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --purge-config|--purge)
+      TEER_PURGE_CONFIG=1
+      shift
+      ;;
+    -h|--help)
+      echo "Usage: uninstall.sh [--purge-config]"
+      echo "  --purge-config   Hapus juga config di ~/.config/teer"
+      echo "  Bisa juga lewat env: TEER_PURGE_CONFIG=1"
+      exit 0
+      ;;
+    *)
+      error "Argumen tidak dikenal: $1"
+      ;;
+  esac
+done
 
 OS="$(uname -s)"
 case "$OS" in

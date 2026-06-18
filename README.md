@@ -57,13 +57,21 @@ Think of it as a terminal emulator (like Tabby or Wave) combined with VS Code's 
 curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/install.sh | bash
 ```
 
+Binary is installed to `~/.local/bin/teer` (no sudo required). The installer automatically adds `~/.local/bin` to `PATH` in `~/.bashrc` / `~/.zshrc` if not already present — open a new terminal after install.
+
 Or install a specific version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/install.sh | TEER_VERSION=v0.1.0 bash
+curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/install.sh | bash -s -- --version v0.1.0
 ```
 
-> **Note:** Put `TEER_VERSION` before `bash`, not before `curl`. In a pipe, the env var must be set on the process that runs the script (`bash`), otherwise the installer falls back to the GitHub `releases/latest` API.
+> **Note:** When piping, pass the version as an argument (`bash -s -- --version ...`). Setting `TEER_VERSION=...` before `curl` does **not** work — the env var dies with the `curl` process and never reaches `bash`, so the installer falls back to the GitHub `releases/latest` API. If you prefer the env var, put it before `bash`: `... | TEER_VERSION=v0.1.0 bash`.
+
+Custom install directory:
+
+```bash
+INSTALL_DIR=~/.local/bin curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/install.sh | INSTALL_DIR=~/.local/bin bash
+```
 
 **Linux system dependency** (required for WebKit):
 
@@ -74,6 +82,20 @@ sudo apt install libwebkit2gtk-4.1-0
 # Fedora
 sudo dnf install webkitgtk6.0
 ```
+
+### Install from Source (for developers / contributors)
+
+If you have already cloned the repository, use this script to build and install directly from local source — no need to wait for a new release.
+
+**Prerequisites:** Go 1.25+, Node.js 18+, [Task CLI](https://taskfile.dev), [Wails v3 CLI](https://v3.wails.io/getting-started/installation)
+
+```bash
+git clone https://github.com/triadmoko/teer
+cd teer
+./install-dev.sh
+```
+
+Binary is installed to `~/.local/bin/teer`. After `git pull`, re-run `./install-dev.sh` to update.
 
 ### Quick Install (Windows)
 
@@ -93,11 +115,13 @@ The binary is installed to `%LOCALAPPDATA%\Programs\teer\teer.exe` and added to 
 curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.sh | bash
 ```
 
-Hapus config juga:
+Also remove config:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.sh | TEER_PURGE_CONFIG=1 bash
+curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.sh | bash -s -- --purge-config
 ```
+
+> The uninstaller removes the binary from both `~/.local/bin` and `/usr/local/bin` (legacy install location).
 
 **Windows** (PowerShell):
 
@@ -105,13 +129,13 @@ curl -fsSL https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.sh | 
 irm https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.ps1 | iex
 ```
 
-Hapus config juga:
+Also remove config:
 
 ```powershell
 $env:TEER_PURGE_CONFIG = "1"; irm https://raw.githubusercontent.com/triadmoko/teer/main/uninstall.ps1 | iex
 ```
 
-Config disimpan di `~/.config/teer/` (Linux/macOS) atau `%APPDATA%\teer\` (Windows).
+Config is stored at `~/.config/teer/` (Linux/macOS) or `%APPDATA%\teer\` (Windows).
 
 ### Manual Install
 
