@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"teer/internal/domain"
@@ -184,14 +185,30 @@ func (s *SessionService) ServiceShutdown() error {
 }
 
 func buildEnv(override map[string]string) []string {
-	if len(override) == 0 {
-		return nil
-	}
 	env := os.Environ()
+	// Selalu set TERM & COLORTERM agar warna/highlight prompt bekerja walau app
+	// diluncurkan dari dock/desktop icon — proses semacam itu tidak mewarisi
+	// environment terminal, sehingga TERM kosong dan bash menonaktifkan warna.
+	// Renderer selalu xterm.js yang mendukung 256 color + truecolor.
+	env = setEnv(env, "TERM", "xterm-256color")
+	env = setEnv(env, "COLORTERM", "truecolor")
 	for k, v := range override {
-		env = append(env, k+"="+v)
+		env = setEnv(env, k, v)
 	}
 	return env
+}
+
+// setEnv menimpa nilai key bila sudah ada di env (mencegah duplikat), atau
+// menambah entri baru bila belum ada. Berformat "KEY=VALUE".
+func setEnv(env []string, key, val string) []string {
+	prefix := key + "="
+	for i, e := range env {
+		if strings.HasPrefix(e, prefix) {
+			env[i] = prefix + val
+			return env
+		}
+	}
+	return append(env, prefix+val)
 }
 
 // exitCoder dipenuhi *exec.ExitError (Unix) maupun *exitError ConPTY (Windows).

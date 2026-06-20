@@ -245,6 +245,15 @@
 
 <style>
 
+  div {
+    /* WebKitGTK menekan mousemove saat drag pada elemen user-select:none.
+       Override di sini agar drag-to-select sampai ke xterm; xterm.css
+       sendiri menimpa kembali ke none pada .xterm sehingga native
+       browser selection tetap tidak terlihat. */
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   div :global(.xterm) {
     height: 100%;
   }

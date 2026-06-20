@@ -121,7 +121,7 @@
 
 <div class="flex h-screen w-screen overflow-hidden">
   <Sidebar />
-  <main class="flex min-w-0 flex-1 flex-col bg-base">
+  <main class="relative flex min-w-0 flex-1 flex-col bg-base">
     {#if aw}
       <TabBar workspaceId={aw.id} sessions={allSessions} />
       <TerminalStage
