@@ -10,6 +10,8 @@ permissions:
 
 env:
   GONOSUMDB: "github.com/wailsapp/wails/v3"
+  GONOSUMCHECK: "github.com/wailsapp/wails/v3"
+  GOFLAGS: "-mod=mod"
 
 jobs:
   build-linux:
