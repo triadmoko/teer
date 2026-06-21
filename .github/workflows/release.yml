@@ -23,23 +23,19 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install wails3
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.82
 
       - name: Install frontend deps
         working-directory: frontend
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build
         run: |
           VERSION="${{ github.ref_name }}"
-          cd frontend && npm run build && cd ..
+          cd frontend && bun run build && cd ..
           CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
             go build -tags production -trimpath -buildvcs=false \
             -ldflags="-w -s -X main.Version=${VERSION}" \
@@ -61,24 +57,20 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install wails3
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.82
 
       - name: Install frontend deps
         working-directory: frontend
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build
         shell: bash
         run: |
           VERSION="${{ github.ref_name }}"
-          cd frontend && npm run build && cd ..
+          cd frontend && bun run build && cd ..
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
             go build -tags production -trimpath -buildvcs=false \
             -ldflags="-w -s -H windowsgui -X main.Version=${VERSION}" \
@@ -100,21 +92,17 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install wails3
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.82
 
       - name: Install frontend deps
         working-directory: frontend
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build frontend
-        run: cd frontend && npm run build
+        run: cd frontend && bun run build
 
       - name: Build arm64
         run: |
