@@ -10,7 +10,6 @@ permissions:
 
 env:
   GONOSUMDB: "github.com/wailsapp/wails/v3"
-  GONOSUMCHECK: "github.com/wailsapp/wails/v3"
   GOFLAGS: "-mod=mod"
 
 jobs:
@@ -86,6 +85,9 @@ jobs:
         run: |
           go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.104
           go install github.com/go-task/task/v3/cmd/task@latest
+
+      - name: Build frontend
+        run: task common:build:frontend
 
       - name: Build universal
         run: task darwin:build:universal VERSION=${{ github.ref_name }}
