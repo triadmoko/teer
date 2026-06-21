@@ -1,12 +1,13 @@
 <script lang="ts">
   import {
     IconX, IconPlus, IconRectangle, IconLayoutGrid, IconRefresh,
-    IconBroadcast, IconSettings, IconAdjustments,
+    IconBroadcast, IconSettings, IconAdjustments, IconPlayerPlay,
   } from "@tabler/icons-svelte";
   import type { SessionDef } from "@domain/models";
-  import { COL_CHOICES } from "@domain/layout";
+  import { COL_PRESET_CHOICES, GRID } from "@domain/layout";
   import {
     activeSessionId,
+    activeWorkspaceId,
     running,
     selectSession,
     addSession,
@@ -14,6 +15,7 @@
     editSession,
     closeSession,
     restartSession,
+    runAllStartupCommands,
     layoutMode,
     gridCols,
     broadcastMode,
@@ -24,6 +26,8 @@
 
   let { workspaceId, sessions = [] }: { workspaceId: string; sessions?: SessionDef[] } =
     $props();
+
+  let customColsMode = $state(false);
 
   async function onClose(s: SessionDef, e: MouseEvent) {
     e.stopPropagation();
@@ -101,6 +105,15 @@
   <div class="flex shrink-0 items-center gap-[2px] border-l border-line px-2">
 
     <button
+      class="flex min-w-[26px] cursor-pointer items-center justify-center rounded-[5px] border border-transparent bg-transparent px-[7px] py-1 text-zinc-400 hover:bg-raise hover:text-green-400"
+      title="Jalankan startup command semua terminal"
+      aria-label="Jalankan semua startup command"
+      onclick={() => $activeWorkspaceId && runAllStartupCommands($activeWorkspaceId)}
+    ><IconPlayerPlay size={14} /></button>
+
+    <span class="mx-1 h-[18px] w-px bg-line"></span>
+
+    <button
       class="flex min-w-[26px] cursor-pointer items-center justify-center rounded-[5px] border px-[7px] py-1 {$broadcastMode
         ? 'border-orange-500 bg-orange-500/20 text-orange-300'
         : 'border-transparent bg-transparent text-zinc-400 hover:bg-raise hover:text-zinc-50'}"
@@ -131,16 +144,42 @@
     >
     {#if $layoutMode === "grid"}
       <span class="mx-1 h-[18px] w-px bg-line"></span>
-      {#each COL_CHOICES as c (c)}
-        <button
-          class="min-w-[26px] cursor-pointer rounded-[5px] border px-[7px] py-1 text-[13px] leading-none {$gridCols ===
-          c
-            ? 'border-zinc-700 bg-active text-zinc-50'
-            : 'border-transparent bg-transparent text-zinc-400 hover:bg-raise hover:text-zinc-50'}"
-          title={`${c} kolom`}
-          onclick={() => gridCols.set(c)}>{c}</button
+      {#if customColsMode}
+        <input
+          type="number"
+          min={GRID.MIN_COLS}
+          max={GRID.MAX_COLS}
+          value={$gridCols}
+          class="w-14 rounded-[5px] border border-zinc-700 bg-active px-1.5 py-0.5 text-center text-[13px] leading-none text-zinc-50 outline-none"
+          oninput={(e) => {
+            const v = parseInt((e.target as HTMLInputElement).value);
+            if (!isNaN(v) && v >= GRID.MIN_COLS && v <= GRID.MAX_COLS) gridCols.set(v);
+          }}
+          onblur={() => (customColsMode = false)}
+          onkeydown={(e) => { if (e.key === "Escape" || e.key === "Enter") customColsMode = false; }}
+        />
+      {:else}
+        <select
+          class="cursor-pointer rounded-[5px] border border-zinc-700 bg-active px-1.5 py-0.5 text-[13px] leading-none text-zinc-50 outline-none"
+          value={COL_PRESET_CHOICES.includes($gridCols as any) ? $gridCols : "custom"}
+          onchange={(e) => {
+            const v = (e.target as HTMLSelectElement).value;
+            if (v === "custom") {
+              customColsMode = true;
+            } else {
+              gridCols.set(parseInt(v));
+            }
+          }}
         >
-      {/each}
+          {#each COL_PRESET_CHOICES as c (c)}
+            <option value={c}>{c} kolom</option>
+          {/each}
+          {#if !COL_PRESET_CHOICES.includes($gridCols as any)}
+            <option value={$gridCols}>{$gridCols} kolom</option>
+          {/if}
+          <option value="custom">Kustom...</option>
+        </select>
+      {/if}
     {/if}
 
     <span class="mx-1 h-[18px] w-px bg-line"></span>

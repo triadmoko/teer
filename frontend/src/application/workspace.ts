@@ -68,6 +68,38 @@ export function selectWorkspace(id: string): void {
   activeSessionId.set(target?.id ?? null);
 }
 
+// Jalankan startupCommand di semua session workspace.
+// Session running → write langsung. Session mati → start dulu (command ikut via startupCommand).
+// Prioritas command: session.startupCommand → ws.startupCommand → skip.
+export function runAllStartupCommands(workspaceId: string): void {
+  const ws = get(workspaces).find((w) => w?.id === workspaceId) ?? null;
+  const sessions = sessionsOf(ws);
+  const wsEnv = (ws?.env ?? {}) as Record<string, string>;
+  const wsCwd = ws?.defaultCwd ?? "";
+  const wsStartupCommand = ws?.startupCommand ?? "";
+  const runningMap = get(running);
+
+  for (const s of sessions) {
+    const cmd = s.startupCommand || wsStartupCommand;
+    if (!cmd) continue;
+
+    if (runningMap[s.id]) {
+      sessionGateway.write(s.id, cmd + "\n").catch(() => {});
+    } else {
+      open(s.id);
+      sessionGateway.start({
+        id: s.id,
+        shell: s.shell ?? "",
+        cwd: s.cwd || wsCwd,
+        env: mergeEnv(wsEnv, s.env),
+        startupCommand: cmd,
+        cols: 80,
+        rows: 24,
+      }).catch(() => {});
+    }
+  }
+}
+
 export async function createWorkspace(
   name: string,
   color: string,
