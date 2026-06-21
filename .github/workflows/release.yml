@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  GONOSUMDB: "github.com/wailsapp/wails/v3"
+
 jobs:
   build-linux:
     name: Build Linux (amd64)
@@ -25,26 +28,18 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
-      - name: Install wails3
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.104
-
-      - name: Install frontend deps
-        working-directory: frontend
-        run: bun install --frozen-lockfile
+      - name: Install tools
+        run: |
+          go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.104
+          go install github.com/go-task/task/v3/cmd/task@latest
 
       - name: Build
-        run: |
-          VERSION="${{ github.ref_name }}"
-          cd frontend && bun run build && cd ..
-          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 \
-            go build -tags production -trimpath -buildvcs=false \
-            -ldflags="-w -s -X main.Version=${VERSION}" \
-            -o bin/teer-linux-amd64 .
+        run: task linux:build VERSION=${{ github.ref_name }}
 
       - uses: actions/upload-artifact@v4
         with:
           name: teer-linux-amd64
-          path: bin/teer-linux-amd64
+          path: bin/Teer
 
   build-windows:
     name: Build Windows (amd64)
@@ -59,27 +54,18 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
-      - name: Install wails3
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.104
-
-      - name: Install frontend deps
-        working-directory: frontend
-        run: bun install --frozen-lockfile
+      - name: Install tools
+        run: |
+          go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.104
+          go install github.com/go-task/task/v3/cmd/task@latest
 
       - name: Build
-        shell: bash
-        run: |
-          VERSION="${{ github.ref_name }}"
-          cd frontend && bun run build && cd ..
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 \
-            go build -tags production -trimpath -buildvcs=false \
-            -ldflags="-w -s -H windowsgui -X main.Version=${VERSION}" \
-            -o bin/teer-windows-amd64.exe .
+        run: task windows:build VERSION=${{ github.ref_name }}
 
       - uses: actions/upload-artifact@v4
         with:
           name: teer-windows-amd64
-          path: bin/teer-windows-amd64.exe
+          path: bin/Teer.exe
 
   build-macos-universal:
     name: Build macOS Universal (.app)
@@ -94,50 +80,16 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
 
-      - name: Install wails3
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.104
-
-      - name: Install frontend deps
-        working-directory: frontend
-        run: bun install --frozen-lockfile
-
-      - name: Build frontend
-        run: cd frontend && bun run build
-
-      - name: Build arm64
+      - name: Install tools
         run: |
-          VERSION="${{ github.ref_name }}"
-          CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 \
-            CGO_CFLAGS="-mmacosx-version-min=12.0" \
-            CGO_LDFLAGS="-mmacosx-version-min=12.0" \
-            MACOSX_DEPLOYMENT_TARGET="12.0" \
-            go build -tags production -trimpath -buildvcs=false \
-            -ldflags="-w -s -X main.Version=${VERSION}" \
-            -o bin/teer-darwin-arm64 .
+          go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.104
+          go install github.com/go-task/task/v3/cmd/task@latest
 
-      - name: Build amd64
-        run: |
-          VERSION="${{ github.ref_name }}"
-          CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 \
-            CGO_CFLAGS="-mmacosx-version-min=12.0" \
-            CGO_LDFLAGS="-mmacosx-version-min=12.0" \
-            MACOSX_DEPLOYMENT_TARGET="12.0" \
-            go build -tags production -trimpath -buildvcs=false \
-            -ldflags="-w -s -X main.Version=${VERSION}" \
-            -o bin/teer-darwin-amd64 .
+      - name: Build universal
+        run: task darwin:build:universal VERSION=${{ github.ref_name }}
 
-      - name: Create universal binary
-        run: lipo -create -output bin/teer bin/teer-darwin-arm64 bin/teer-darwin-amd64
-
-      - name: Package .app bundle
-        run: |
-          mkdir -p bin/Teer.app/Contents/MacOS
-          mkdir -p bin/Teer.app/Contents/Resources
-          cp build/darwin/icons.icns bin/Teer.app/Contents/Resources/
-          [ -f build/darwin/Assets.car ] && cp build/darwin/Assets.car bin/Teer.app/Contents/Resources/
-          cp bin/teer bin/Teer.app/Contents/MacOS/teer
-          cp build/darwin/Info.plist bin/Teer.app/Contents/Info.plist
-          codesign --force --deep --sign - bin/Teer.app
+      - name: Package .app
+        run: task darwin:package:universal
 
       - name: Zip .app
         run: cd bin && zip -r teer-macos-universal.zip Teer.app
@@ -152,14 +104,16 @@ jobs:
     needs: [build-linux, build-windows, build-macos-universal]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
       - uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
+
+      - name: Rename Linux binary
+        run: mv dist/Teer dist/teer-linux-amd64
+
+      - name: Rename Windows binary
+        run: mv dist/Teer.exe dist/teer-windows-amd64.exe
 
       - name: List artifacts
         run: ls -lh dist/
