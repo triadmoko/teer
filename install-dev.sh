@@ -21,10 +21,10 @@ command -v wails3 >/dev/null 2>&1 || error "wails3 CLI tidak ditemukan. Install:
 
 # WebKit (Linux saja)
 if [[ "$(uname -s)" == "Linux" ]]; then
-  if ! ldconfig -p 2>/dev/null | grep -q "libwebkit2gtk-4\.1\|libwebkit2gtk-4\.0\|libwebkitgtk-6"; then
-    warn "WebKit tidak terdeteksi. Jalankan:"
-    warn "  sudo apt install libwebkit2gtk-4.1-0   # Debian/Ubuntu"
-    warn "  sudo dnf install webkitgtk6.0           # Fedora"
+  if ! ldconfig -p 2>/dev/null | grep -q "libwebkitgtk-6\|libwebkit2gtk-6"; then
+    warn "WebKitGTK 6.0 tidak terdeteksi. Jalankan:"
+    warn "  sudo apt install libgtk-4-dev libwebkitgtk-6.0-dev   # Debian/Ubuntu"
+    warn "  sudo dnf install gtk4-devel webkitgtk6.0-devel        # Fedora"
     warn "Lanjutkan build tetap dijalankan..."
   fi
 fi

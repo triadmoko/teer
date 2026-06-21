@@ -221,11 +221,10 @@ fi
 
 # --- Linux: install dependencies hint ---
 if [ "$OS_KEY" = "linux" ]; then
-  if ! dpkg -l libwebkit2gtk-4.1-0 &>/dev/null 2>&1 && \
-     ! rpm -q webkitgtk4.1 &>/dev/null 2>&1; then
+  if ! ldconfig -p 2>/dev/null | grep -q "libwebkitgtk-6\|libwebkit2gtk-6"; then
     warn "Missing system dependency. Run:"
-    warn "  sudo apt install libwebkit2gtk-4.1-0  # Debian/Ubuntu"
-    warn "  sudo dnf install webkitgtk6.0          # Fedora"
+    warn "  sudo apt install libwebkitgtk-6.0-0  # Debian/Ubuntu"
+    warn "  sudo dnf install webkitgtk6.0         # Fedora"
   fi
 fi
 
