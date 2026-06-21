@@ -26,7 +26,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
 
       - name: Install wails3
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.82
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.104
 
       - name: Install frontend deps
         working-directory: frontend
@@ -60,7 +60,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
 
       - name: Install wails3
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.82
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.104
 
       - name: Install frontend deps
         working-directory: frontend
@@ -95,7 +95,7 @@ jobs:
       - uses: oven-sh/setup-bun@v2
 
       - name: Install wails3
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.82
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha2.104
 
       - name: Install frontend deps
         working-directory: frontend
