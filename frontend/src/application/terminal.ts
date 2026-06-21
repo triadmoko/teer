@@ -47,3 +47,12 @@ export const onSessionExit = (
   id: string,
   cb: (code: number) => void,
 ): (() => void) => terminalTransport.onExit(id, cb);
+
+// persistScrollback menyimpan snapshot scrollback (string hasil serialize xterm)
+// ke disk lewat backend. Best-effort.
+export const persistScrollback = (id: string, data: string): Promise<void> =>
+  sessionGateway.saveScrollback(id, data);
+
+// restoreScrollback mengambil snapshot scrollback terakhir; "" bila tidak ada.
+export const restoreScrollback = (id: string): Promise<string> =>
+  sessionGateway.loadScrollback(id);

@@ -24,6 +24,10 @@ const stored = load();
 export const terminalFontSize = writable(stored.fontSize);
 export const terminalFontFamily = writable(stored.fontFamily);
 export const terminalThemeName = writable(stored.themeName);
+export const terminalPersistScrollback = writable(stored.persistScrollback);
+export const terminalScrollbackLines = writable(stored.scrollbackLines);
+export const copyOnSelect = writable(stored.copyOnSelect);
+export const middleClickPaste = writable(stored.middleClickPaste);
 
 export const terminalTheme = derived(
   terminalThemeName,
@@ -31,11 +35,31 @@ export const terminalTheme = derived(
 );
 
 derived(
-  [terminalFontSize, terminalFontFamily, terminalThemeName],
-  ([$fontSize, $fontFamily, $themeName]): TerminalSettings => ({
+  [
+    terminalFontSize,
+    terminalFontFamily,
+    terminalThemeName,
+    terminalPersistScrollback,
+    terminalScrollbackLines,
+    copyOnSelect,
+    middleClickPaste,
+  ],
+  ([
+    $fontSize,
+    $fontFamily,
+    $themeName,
+    $persistScrollback,
+    $scrollbackLines,
+    $copyOnSelect,
+    $middleClickPaste,
+  ]): TerminalSettings => ({
     fontSize: $fontSize,
     fontFamily: $fontFamily,
     themeName: $themeName,
+    persistScrollback: $persistScrollback,
+    scrollbackLines: $scrollbackLines,
+    copyOnSelect: $copyOnSelect,
+    middleClickPaste: $middleClickPaste,
   }),
 ).subscribe((v) => {
   try {

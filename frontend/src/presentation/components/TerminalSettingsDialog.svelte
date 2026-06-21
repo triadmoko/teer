@@ -5,12 +5,17 @@
     terminalFontSize,
     terminalFontFamily,
     terminalThemeName,
+    terminalPersistScrollback,
+    terminalScrollbackLines,
+    copyOnSelect,
+    middleClickPaste,
   } from "@application";
   import {
     THEMES,
     FONT_FAMILIES,
     FONT_FAMILY_LABELS,
     FONT_SIZES,
+    SCROLLBACK_OPTIONS,
   } from "@domain/terminalSettings";
 
   function close() {
@@ -122,6 +127,107 @@
               </button>
             {/each}
           </div>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[12px] font-medium text-zinc-400">
+              Pulihkan Scrollback
+            </span>
+            <button
+              role="switch"
+              aria-checked={$terminalPersistScrollback}
+              aria-label="Pulihkan scrollback sesi sebelumnya"
+              class="relative h-[20px] w-[36px] cursor-pointer rounded-full border-none transition-colors {$terminalPersistScrollback
+                ? 'bg-blue-500'
+                : 'bg-line-3'}"
+              onclick={() =>
+                terminalPersistScrollback.set(!$terminalPersistScrollback)}
+            >
+              <span
+                class="absolute top-[2px] h-[16px] w-[16px] rounded-full bg-white transition-all {$terminalPersistScrollback
+                  ? 'left-[18px]'
+                  : 'left-[2px]'}"
+              ></span>
+            </button>
+          </div>
+          <p class="text-[11px] leading-snug text-zinc-500">
+            Tampilkan output sesi terakhir (read-only) saat aplikasi dibuka
+            kembali.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <label
+            class="block text-[12px] font-medium text-zinc-400"
+            for="scrollback-lines"
+          >
+            Jumlah Baris Scrollback
+          </label>
+          <select
+            id="scrollback-lines"
+            class="w-full cursor-pointer rounded-[7px] border border-line bg-raise px-3 py-[7px] text-[13px] text-zinc-200 outline-none focus:border-blue-500"
+            bind:value={$terminalScrollbackLines}
+          >
+            {#each SCROLLBACK_OPTIONS as n (n)}
+              <option value={n}>{n.toLocaleString()} baris</option>
+            {/each}
+          </select>
+          <p class="text-[11px] leading-snug text-zinc-500">
+            Berlaku untuk terminal yang dibuka setelahnya.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[12px] font-medium text-zinc-400">
+              Copy saat Seleksi
+            </span>
+            <button
+              role="switch"
+              aria-checked={$copyOnSelect}
+              aria-label="Salin otomatis teks yang diseleksi"
+              class="relative h-[20px] w-[36px] cursor-pointer rounded-full border-none transition-colors {$copyOnSelect
+                ? 'bg-blue-500'
+                : 'bg-line-3'}"
+              onclick={() => copyOnSelect.set(!$copyOnSelect)}
+            >
+              <span
+                class="absolute top-[2px] h-[16px] w-[16px] rounded-full bg-white transition-all {$copyOnSelect
+                  ? 'left-[18px]'
+                  : 'left-[2px]'}"
+              ></span>
+            </button>
+          </div>
+          <p class="text-[11px] leading-snug text-zinc-500">
+            Salin teks ke clipboard secara otomatis begitu seleksi selesai.
+          </p>
+        </div>
+
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[12px] font-medium text-zinc-400">
+              Paste Klik Tengah
+            </span>
+            <button
+              role="switch"
+              aria-checked={$middleClickPaste}
+              aria-label="Tempel dari clipboard saat klik tengah mouse"
+              class="relative h-[20px] w-[36px] cursor-pointer rounded-full border-none transition-colors {$middleClickPaste
+                ? 'bg-blue-500'
+                : 'bg-line-3'}"
+              onclick={() => middleClickPaste.set(!$middleClickPaste)}
+            >
+              <span
+                class="absolute top-[2px] h-[16px] w-[16px] rounded-full bg-white transition-all {$middleClickPaste
+                  ? 'left-[18px]'
+                  : 'left-[2px]'}"
+              ></span>
+            </button>
+          </div>
+          <p class="text-[11px] leading-snug text-zinc-500">
+            Klik tombol tengah mouse untuk menempel dari clipboard.
+          </p>
         </div>
       </div>
 

@@ -17,14 +17,30 @@ import (
 )
 
 const githubRepo = "triadmoko/teer"
+const defaultAPIBase = "https://api.github.com"
 
 type UpdaterService struct {
-	version string
-	emitter domain.EventEmitter
+	version    string
+	emitter    domain.EventEmitter
+	httpClient *http.Client
+	apiBaseURL string
+	targetPath string
+	onDone     func() // dipanggil setelah apply selesai; default: quit app
 }
 
 func NewUpdaterService(version string, emitter domain.EventEmitter) *UpdaterService {
-	return &UpdaterService{version: version, emitter: emitter}
+	return &UpdaterService{
+		version:    version,
+		emitter:    emitter,
+		apiBaseURL: defaultAPIBase,
+	}
+}
+
+func (u *UpdaterService) client() *http.Client {
+	if u.httpClient != nil {
+		return u.httpClient
+	}
+	return &http.Client{Timeout: 15 * time.Second}
 }
 
 type UpdateInfo struct {
@@ -47,8 +63,11 @@ type ghAsset struct {
 }
 
 func (u *UpdaterService) CheckUpdate() (*UpdateInfo, error) {
-	url := fmt.Sprintf("https://api.github.com/repos/%s/releases/latest", githubRepo)
-	client := &http.Client{Timeout: 15 * time.Second}
+	base := u.apiBaseURL
+	if base == "" {
+		base = defaultAPIBase
+	}
+	url := fmt.Sprintf("%s/repos/%s/releases/latest", base, githubRepo)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -56,7 +75,7 @@ func (u *UpdaterService) CheckUpdate() (*UpdateInfo, error) {
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("User-Agent", "teer/"+u.version)
 
-	resp, err := client.Do(req)
+	resp, err := u.client().Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("gagal cek update: %w", err)
 	}
@@ -90,8 +109,11 @@ func (u *UpdaterService) CheckUpdate() (*UpdateInfo, error) {
 func (u *UpdaterService) DownloadAndApply(downloadURL string) error {
 	u.emitter.Emit("updater:progress", map[string]any{"stage": "downloading", "percent": 0})
 
-	client := &http.Client{Timeout: 5 * time.Minute}
-	resp, err := client.Get(downloadURL)
+	dlClient := u.httpClient
+	if dlClient == nil {
+		dlClient = &http.Client{Timeout: 5 * time.Minute}
+	}
+	resp, err := dlClient.Get(downloadURL)
 	if err != nil {
 		return fmt.Errorf("gagal download: %w", err)
 	}
@@ -132,13 +154,18 @@ func (u *UpdaterService) DownloadAndApply(downloadURL string) error {
 
 	u.emitter.Emit("updater:progress", map[string]any{"stage": "applying", "percent": 100})
 
-	selfPath, err := os.Executable()
-	if err != nil {
-		return err
-	}
-	selfPath, err = filepath.EvalSymlinks(selfPath)
-	if err != nil {
-		return err
+	var selfPath string
+	if u.targetPath != "" {
+		selfPath = u.targetPath
+	} else {
+		selfPath, err = os.Executable()
+		if err != nil {
+			return err
+		}
+		selfPath, err = filepath.EvalSymlinks(selfPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := os.Chmod(tmpPath, 0755); err != nil {
@@ -159,10 +186,14 @@ func (u *UpdaterService) DownloadAndApply(downloadURL string) error {
 
 	u.emitter.Emit("updater:progress", map[string]any{"stage": "done", "percent": 100})
 
-	go func() {
-		time.Sleep(500 * time.Millisecond)
-		application.Get().Quit()
-	}()
+	done := u.onDone
+	if done == nil {
+		done = func() {
+			time.Sleep(500 * time.Millisecond)
+			application.Get().Quit()
+		}
+	}
+	go done()
 
 	return nil
 }

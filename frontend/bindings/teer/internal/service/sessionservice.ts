@@ -23,8 +23,24 @@ export function ListRunning(): $CancellablePromise<string[]> {
     });
 }
 
+/**
+ * LoadScrollback mengembalikan snapshot scrollback terakhir, atau "" bila tidak
+ * ada.
+ */
+export function LoadScrollback(id: string): $CancellablePromise<string> {
+    return $Call.ByID(3186707272, id);
+}
+
 export function ResizeSession(id: string, cols: number, rows: number): $CancellablePromise<void> {
     return $Call.ByID(3861567718, id, cols, rows);
+}
+
+/**
+ * SaveScrollback menyimpan snapshot scrollback sebuah session. Best-effort:
+ * kegagalan I/O atau truncate tidak menggagalkan operasi utama.
+ */
+export function SaveScrollback(id: string, data: string): $CancellablePromise<void> {
+    return $Call.ByID(3820704785, id, data);
 }
 
 export function StartSession(opts: $models.StartOptions): $CancellablePromise<void> {

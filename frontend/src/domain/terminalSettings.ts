@@ -77,14 +77,24 @@ export const FONT_FAMILY_LABELS: readonly string[] = [
 
 export const FONT_SIZES: readonly number[] = [10, 11, 12, 13, 14, 15, 16, 18, 20] as const;
 
+export const SCROLLBACK_OPTIONS: readonly number[] = [1000, 5000, 10000, 50000] as const;
+
 export interface TerminalSettings {
   fontSize: number;
   fontFamily: string;
   themeName: string;
+  persistScrollback: boolean;
+  scrollbackLines: number;
+  copyOnSelect: boolean;
+  middleClickPaste: boolean;
 }
 
 export const DEFAULT_TERMINAL_SETTINGS: TerminalSettings = {
   fontSize: 13,
   fontFamily: FONT_FAMILIES[0],
   themeName: "Default Dark",
+  persistScrollback: true,
+  scrollbackLines: 5000,
+  copyOnSelect: false,
+  middleClickPaste: false,
 };

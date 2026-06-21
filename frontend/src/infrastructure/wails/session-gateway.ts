@@ -24,4 +24,9 @@ export const sessionGateway = {
     SessionService.ResizeSession(id, cols, rows),
 
   close: (id: string) => SessionService.CloseSession(id),
+
+  saveScrollback: (id: string, data: string) =>
+    SessionService.SaveScrollback(id, data),
+
+  loadScrollback: (id: string) => SessionService.LoadScrollback(id),
 };

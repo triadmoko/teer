@@ -9,14 +9,16 @@ import (
 	"sync"
 
 	"teer/internal/domain"
+	"teer/internal/infra/config"
 	"teer/internal/infra/terminal"
 )
 
 type Spawner func(terminal.Options) (terminal.PTY, error)
 
 type SessionService struct {
-	emitter domain.EventEmitter
-	spawn   Spawner
+	emitter    domain.EventEmitter
+	spawn      Spawner
+	scrollback *config.ScrollbackStore
 
 	mu   sync.Mutex
 	live map[string]*liveSession
@@ -28,12 +30,31 @@ type liveSession struct {
 	done chan struct{}
 }
 
-func NewSessionService(emitter domain.EventEmitter) *SessionService {
+func NewSessionService(emitter domain.EventEmitter, scrollback *config.ScrollbackStore) *SessionService {
 	return &SessionService{
-		emitter: emitter,
-		spawn:   terminal.Start,
-		live:    make(map[string]*liveSession),
+		emitter:    emitter,
+		spawn:      terminal.Start,
+		scrollback: scrollback,
+		live:       make(map[string]*liveSession),
 	}
+}
+
+// SaveScrollback menyimpan snapshot scrollback sebuah session. Best-effort:
+// kegagalan I/O atau truncate tidak menggagalkan operasi utama.
+func (s *SessionService) SaveScrollback(id string, data string) error {
+	if s.scrollback == nil {
+		return nil
+	}
+	return s.scrollback.Save(id, data)
+}
+
+// LoadScrollback mengembalikan snapshot scrollback terakhir, atau "" bila tidak
+// ada.
+func (s *SessionService) LoadScrollback(id string) (string, error) {
+	if s.scrollback == nil {
+		return "", nil
+	}
+	return s.scrollback.Load(id)
 }
 
 type StartOptions struct {
