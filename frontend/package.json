@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "packageManager": "bun@1.2.16",
   "scripts": {
     "dev": "vite dev",
     "build:dev": "vite build --mode development",

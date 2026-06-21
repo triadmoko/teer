@@ -15,7 +15,7 @@ error() { echo -e "${RED}[teer]${NC} $*" >&2; exit 1; }
 
 # --- cek prasyarat ---
 command -v go    >/dev/null 2>&1 || error "Go tidak ditemukan. Install dari https://go.dev/dl/"
-command -v npm   >/dev/null 2>&1 || error "Node/npm tidak ditemukan. Install dari https://nodejs.org/"
+command -v bun   >/dev/null 2>&1 || error "Bun tidak ditemukan. Install dari https://bun.sh/docs/installation"
 command -v task  >/dev/null 2>&1 || error "Taskfile CLI tidak ditemukan. Install: go install github.com/go-task/task/v3/cmd/task@latest"
 command -v wails3 >/dev/null 2>&1 || error "wails3 CLI tidak ditemukan. Install: go install github.com/wailsapp/wails/v3/cmd/wails3@latest"
 
