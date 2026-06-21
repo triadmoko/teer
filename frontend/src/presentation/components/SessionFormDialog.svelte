@@ -3,6 +3,7 @@
   import { sessionFormDialog } from "@application/sessionFormDialog";
   import { IconFolderOpen } from "@tabler/icons-svelte";
   import { PickDirectory } from "@bindings/teer/internal/service/dialogservice";
+  import { sessionGateway } from "@infrastructure/wails";
 
   let nameInput = $state<HTMLInputElement | undefined>();
   let name = $state("");
@@ -11,6 +12,39 @@
   let startupCommand = $state("");
   let autoStart = $state(false);
   let isEdit = $state(false);
+
+  let availableShells = $state<string[]>([]);
+  let showShellDropdown = $state(false);
+  let filteredShells = $derived(
+    availableShells.filter((s) =>
+      s.toLowerCase().includes(shell.toLowerCase())
+    )
+  );
+
+  async function loadShells() {
+    try {
+      const list = await sessionGateway.listShells();
+      availableShells = list ?? [];
+    } catch {
+      availableShells = [];
+    }
+  }
+
+  function selectShell(s: string) {
+    shell = s;
+    showShellDropdown = false;
+  }
+
+  function onShellFocus() {
+    showShellDropdown = true;
+    if (availableShells.length === 0) loadShells();
+  }
+
+  function onShellBlur() {
+    setTimeout(() => {
+      showShellDropdown = false;
+    }, 150);
+  }
 
   $effect(() => {
     const d = $sessionFormDialog;
@@ -102,18 +136,40 @@
           />
         </label>
 
-        <label class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400"
             >Shell <span class="text-zinc-600">(kosong = default)</span></span
           >
-          <input
-            bind:value={shell}
-            class="w-full rounded-lg border border-zinc-700 bg-base px-[11px] py-[8px] text-sm text-zinc-50 outline-none focus:border-blue-400"
-            placeholder="/bin/bash"
-            type="text"
-            autocomplete="off"
-          />
-        </label>
+          <div class="relative">
+            <input
+              bind:value={shell}
+              onfocus={onShellFocus}
+              onblur={onShellBlur}
+              oninput={() => { showShellDropdown = true; }}
+              class="w-full rounded-lg border border-zinc-700 bg-base px-[11px] py-[8px] text-sm text-zinc-50 outline-none focus:border-blue-400"
+              placeholder="/bin/bash"
+              type="text"
+              autocomplete="off"
+            />
+            {#if showShellDropdown && filteredShells.length > 0}
+              <ul
+                class="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border border-zinc-700 bg-elevated shadow-lg"
+              >
+                {#each filteredShells as s (s)}
+                  <li>
+                    <button
+                      type="button"
+                      class="w-full cursor-pointer px-[11px] py-[7px] text-left text-sm text-zinc-200 hover:bg-active"
+                      onmousedown={() => selectShell(s)}
+                    >
+                      {s}
+                    </button>
+                  </li>
+                {/each}
+              </ul>
+            {/if}
+          </div>
+        </div>
 
         <div class="flex flex-col gap-1">
           <span class="text-[11px] text-zinc-400"

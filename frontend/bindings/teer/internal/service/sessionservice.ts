@@ -17,6 +17,15 @@ export function IsRunning(id: string): $CancellablePromise<boolean> {
     return $Call.ByID(1746492641, id);
 }
 
+/**
+ * ListAvailableShells mengembalikan daftar shell/multiplexer yang ditemukan di PATH.
+ */
+export function ListAvailableShells(): $CancellablePromise<string[]> {
+    return $Call.ByID(3529567282).then(($result: any) => {
+        return $$createType0($result);
+    });
+}
+
 export function ListRunning(): $CancellablePromise<string[]> {
     return $Call.ByID(4261720809).then(($result: any) => {
         return $$createType0($result);

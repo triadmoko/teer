@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 
@@ -203,6 +204,23 @@ func (s *SessionService) shutdownAll() {
 func (s *SessionService) ServiceShutdown() error {
 	s.shutdownAll()
 	return nil
+}
+
+// kandidat shell dan multiplexer yang umum digunakan
+var shellCandidates = []string{
+	"bash", "zsh", "fish", "sh", "ksh", "csh", "tcsh", "dash",
+	"tmux", "screen", "nu", "elvish", "xonsh",
+}
+
+// ListAvailableShells mengembalikan daftar shell/multiplexer yang ditemukan di PATH.
+func (s *SessionService) ListAvailableShells() []string {
+	var found []string
+	for _, name := range shellCandidates {
+		if path, err := exec.LookPath(name); err == nil {
+			found = append(found, path)
+		}
+	}
+	return found
 }
 
 func buildEnv(override map[string]string) []string {

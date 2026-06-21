@@ -15,6 +15,8 @@ export interface StartSessionInput {
 export const sessionGateway = {
   listRunning: () => SessionService.ListRunning(),
 
+  listShells: () => SessionService.ListAvailableShells(),
+
   start: (opts: StartSessionInput) =>
     SessionService.StartSession(opts as unknown as StartOptions),
 
