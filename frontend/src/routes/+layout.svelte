@@ -4,28 +4,17 @@
   import { goto } from "$app/navigation";
   import Sidebar from "@presentation/components/Sidebar.svelte";
   import TabBar from "@presentation/components/TabBar.svelte";
-  import Dialog from "@presentation/components/Dialog.svelte";
-  import ErrorBanner from "@presentation/components/ErrorBanner.svelte";
   import TerminalStage from "@presentation/components/TerminalStage.svelte";
-  import SessionFormDialog from "@presentation/components/SessionFormDialog.svelte";
-  import WorkspaceSettingsDialog from "@presentation/components/WorkspaceSettingsDialog.svelte";
-  import TerminalSettingsDialog from "@presentation/components/TerminalSettingsDialog.svelte";
-  import CommandPalette from "@presentation/components/CommandPalette.svelte";
-  import UpdateNotification from "@presentation/components/UpdateNotification.svelte";
+  import AppOverlays from "@presentation/components/AppOverlays.svelte";
+  import AppKeyboard from "@presentation/components/AppKeyboard.svelte";
   import { sessionsOf, type SessionDef } from "@domain/models";
   import {
     init,
     activeWorkspace,
     activeWorkspaceId,
-    activeSessionId,
     workspaces,
     opened,
     running,
-    addSession,
-    selectSession,
-    selectWorkspace,
-    closeSession,
-    openCommandPalette,
     checkUpdate,
     listenUpdateProgress,
   } from "@application";
@@ -77,47 +66,10 @@
       });
     }
   });
-
-  function onKey(e: KeyboardEvent) {
-    if (e.ctrlKey && e.shiftKey && (e.key === "p" || e.key === "P")) {
-      e.preventDefault();
-      openCommandPalette();
-      return;
-    }
-    if (e.ctrlKey && e.shiftKey && e.key >= "1" && e.key <= "9") {
-      e.preventDefault();
-      const idx = parseInt(e.key) - 1;
-      const ws = $workspaces[idx];
-      if (ws) selectWorkspace(ws.id);
-      return;
-    }
-    if (!aw) return;
-    if (e.ctrlKey && (e.key === "t" || e.key === "T")) {
-      e.preventDefault();
-      addSession(aw.id);
-    } else if (e.ctrlKey && (e.key === "w" || e.key === "W")) {
-      e.preventDefault();
-      const cur = allSessions.find((s) => s.id === $activeSessionId);
-      if (cur) closeSession(cur);
-    } else if (e.ctrlKey && e.key === "Tab") {
-      e.preventDefault();
-      if (allSessions.length < 2) return;
-      const idx = allSessions.findIndex((s) => s.id === $activeSessionId);
-      const next = allSessions[(idx + 1) % allSessions.length];
-      if (next) selectSession(next.id);
-    }
-  }
 </script>
 
-<svelte:window onkeydown={onKey} />
-
-<Dialog />
-<ErrorBanner />
-<UpdateNotification />
-<SessionFormDialog />
-<WorkspaceSettingsDialog />
-<TerminalSettingsDialog />
-<CommandPalette />
+<AppKeyboard />
+<AppOverlays />
 
 <div class="flex h-screen w-screen overflow-hidden">
   <Sidebar />
