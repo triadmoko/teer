@@ -10,7 +10,6 @@ import (
 	"sync"
 
 	"teer/internal/domain"
-	"teer/internal/infra/config"
 	"teer/internal/infra/terminal"
 )
 
@@ -19,7 +18,7 @@ type Spawner func(terminal.Options) (terminal.PTY, error)
 type SessionService struct {
 	emitter    domain.EventEmitter
 	spawn      Spawner
-	scrollback *config.ScrollbackStore
+	scrollback domain.Scrollback
 
 	mu   sync.Mutex
 	live map[string]*liveSession
@@ -31,7 +30,7 @@ type liveSession struct {
 	done chan struct{}
 }
 
-func NewSessionService(emitter domain.EventEmitter, scrollback *config.ScrollbackStore) *SessionService {
+func NewSessionService(emitter domain.EventEmitter, scrollback domain.Scrollback) *SessionService {
 	return &SessionService{
 		emitter:    emitter,
 		spawn:      terminal.Start,

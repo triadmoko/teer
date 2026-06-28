@@ -7,6 +7,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"teer/internal/infra/config"
+	"teer/internal/infra/sqlite"
 	"teer/internal/service"
 )
 
@@ -20,18 +21,24 @@ var assets embed.FS
 var appIcon []byte
 
 func main() {
-	store, err := config.NewStore()
+	db, err := sqlite.Open()
 	if err != nil {
-		log.Fatalf("gagal inisialisasi store: %v", err)
+		log.Fatalf("gagal inisialisasi database: %v", err)
 	}
 
-	scrollback, err := config.NewScrollbackStore()
-	if err != nil {
-		log.Fatalf("gagal inisialisasi scrollback store: %v", err)
+	store := sqlite.NewConfigStore(db)
+	scrollback := sqlite.NewScrollbackStore(db)
+
+	// Migrasi data lama (JSON + scrollback files) ke SQLite, bila ada.
+	if oldStore, storeErr := config.NewStore(); storeErr == nil {
+		if oldScrollback, sbErr := config.NewScrollbackStore(); sbErr == nil {
+			if err := sqlite.MigrateIfNeeded(db, oldStore, oldScrollback); err != nil {
+				log.Printf("migrasi data lama: %v", err)
+			}
+		}
 	}
 
-	// Bersihkan snapshot scrollback yatim (session yang sudah dihapus dari
-	// config) — best-effort, jangan halt startup bila gagal.
+	// Bersihkan scrollback yatim (session yang sudah dihapus dari config).
 	if cfg, err := store.Load(); err == nil {
 		var ids []string
 		for _, ws := range cfg.Workspaces {

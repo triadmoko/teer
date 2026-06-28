@@ -80,6 +80,7 @@ export function runAllStartupCommands(workspaceId: string): void {
   const runningMap = get(running);
 
   for (const s of sessions) {
+    if (!s.autoStart) continue;
     const cmd = s.startupCommand || wsStartupCommand;
     if (!cmd) continue;
 
