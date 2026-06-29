@@ -29,6 +29,7 @@
     persistScrollback,
     restoreScrollback,
   } from "@application";
+  import { park, checkout } from "@infrastructure/terminalRegistry";
 
   let {
     session,
@@ -41,7 +42,7 @@
   }: {
     session: SessionDef;
     active?: boolean;
-            visible?: boolean;
+    visible?: boolean;
     // connect: PTY hanya dijalankan saat true. Session non-autoStart yang belum
     // dibuka tampil sebagai cell/tab "mati" (tombol Restart) sampai dipilih.
     connect?: boolean;
@@ -50,27 +51,22 @@
     wsStartupCommand?: string;
   } = $props();
 
-  let container = $state<HTMLDivElement>();
+  // wrapper: div Svelte-managed (bind:this). Datang dan pergi sesuai lifecycle komponen.
+  // _el (di dalam $effect): div yang xterm.open() dipanggil — dikelola manual lewat
+  // registry agar bisa di-park/checkout tanpa dispose saat komponen unmount.
+  let wrapper = $state<HTMLDivElement>();
   let term = $state<Terminal | undefined>();
   let fit = $state<FitAddon | undefined>();
   let search = $state<SearchAddon | undefined>();
-  // restoreDone selesai setelah scrollback lama (jika ada) ditulis ke terminal,
-  // sehingga PTY baru hanya dijalankan sesudahnya — cegah output bercampur.
   let restoreDone: Promise<void> = Promise.resolve();
-  // dirty: ada output baru sejak snapshot terakhir. Snapshot periodik hanya
-  // menserialisasi bila dirty (hemat untuk session verbose).
-  let dirty = false;
-  let cleanups = $state<Array<() => void>>([]);
-  let ro = $state<ResizeObserver | undefined>();
   let fitTimer = $state<ReturnType<typeof setTimeout> | undefined>();
-    let exited = $state(false);
-    // started: PTY sudah pernah dijalankan. Cegah double-connect dan cegah
-    // auto-reconnect setelah proses exit (restart hanya via tombol).
-    let started = $state(false);
-    // Context menu klik-kanan (Copy/Paste). null = tertutup.
-    let menu = $state<{ x: number; y: number; hasSel: boolean } | null>(null);
+  let exited = $state(false);
+  // started: PTY sudah pernah dijalankan. Cegah double-connect dan cegah
+  // auto-reconnect setelah proses exit (restart hanya via tombol).
+  let started = $state(false);
+  // Context menu klik-kanan (Copy/Paste). null = tertutup.
+  let menu = $state<{ x: number; y: number; hasSel: boolean } | null>(null);
 
-  // Salin teks ke clipboard. Gagal diam-diam bila clipboard ditolak WebView.
   async function copyText(text: string) {
     try {
       await navigator.clipboard.writeText(text);
@@ -79,8 +75,6 @@
     }
   }
 
-  // Tempel dari clipboard ke stdin shell. WAJIB lewat writeSession (bukan
-  // term.write) agar teks benar-benar masuk ke PTY, bukan hanya dirender lokal.
   async function pasteInto(sid: string) {
     try {
       const text = await navigator.clipboard.readText();
@@ -100,7 +94,7 @@
     menu = null;
   }
 
-      function refit() {
+  function refit() {
     if (fitTimer) clearTimeout(fitTimer);
     fitTimer = setTimeout(() => {
       if (!fit || !term) return;
@@ -108,7 +102,7 @@
         fit.fit();
         term.refresh(0, term.rows - 1);
       } catch {
-
+        // abaikan — fit gagal saat container tersembunyi
       }
     }, 50);
   }
@@ -120,8 +114,6 @@
     });
   }
 
-  // Pulihkan scrollback sesi sebelumnya (read-only) sebelum PTY dijalankan.
-  // Best-effort: kegagalan tidak boleh menghalangi koneksi PTY.
   async function maybeRestore(_term: Terminal, sid: string) {
     if (!get(terminalPersistScrollback)) return;
     try {
@@ -137,8 +129,6 @@
     }
   }
 
-  // Hubungkan PTY (sekali). Dipanggil saat mount jika connect=true, atau saat
-  // session non-autoStart akhirnya dipilih (connect berubah jadi true).
   function connectPty(_term: Terminal) {
     const sid = untrack(() => session.id);
     untrack(() => { started = true; });
@@ -146,7 +136,7 @@
       setRunning(sid, true);
       untrack(() => { exited = false; });
       tick().then(() => {
-        try { fit?.fit(); } catch {  }
+        try { fit?.fit(); } catch {}
         const { cols, rows } = _term;
         if (cols > 0 && rows > 0) resizeSession(sid, cols, rows);
         if (untrack(() => visible && active)) _term.focus();
@@ -155,122 +145,127 @@
   }
 
   $effect(() => {
-        const el = container;
-    if (!el) return;
+    const _wrapper = wrapper;
+    if (!_wrapper) return;
 
-    const _term = new Terminal({
-      fontFamily: untrack(() => get(terminalFontFamily)),
-      fontSize: untrack(() => get(terminalFontSize)),
-      cursorBlink: true,
-      scrollback: untrack(() => get(terminalScrollbackLines)),
-      theme: untrack(() => get(terminalTheme)),
-      allowProposedApi: true,
-    });
-    const _fit = new FitAddon();
-    const _search = new SearchAddon();
-    const _serialize = new SerializeAddon();
-    _term.loadAddon(_fit);
-    _term.loadAddon(_search);
-    _term.loadAddon(_serialize);
-    _term.loadAddon(new WebLinksAddon());
+    const sid = untrack(() => session.id);
+    const cached = checkout(sid);
 
-    _term.open(el);
-    try {
-      _fit.fit();
-    } catch {
+    let _term: Terminal;
+    let _fit: FitAddon;
+    let _search: SearchAddon;
+    let _serialize: SerializeAddon;
+    let _el: HTMLDivElement;
+    let dirtyRef: { value: boolean };
 
+    if (cached) {
+      // Checkout: reuse xterm instance + DOM element dari registry.
+      // Semua listener persistent (onData, onSessionOutput, dll.) sudah aktif.
+      _term = cached.term;
+      _fit = cached.fit;
+      _search = cached.search;
+      _serialize = cached.serialize;
+      _el = cached.el;
+      dirtyRef = cached.dirtyRef;
+      untrack(() => { started = cached.started; });
+      _wrapper.appendChild(_el);
+    } else {
+      // Fresh: buat xterm baru beserta semua listener persistent-nya.
+      dirtyRef = { value: false };
+
+      _el = document.createElement("div");
+      // Styling inline — tidak bisa pakai Tailwind pada elemen dinamis.
+      _el.style.cssText =
+        "position:absolute;inset:0;padding:6px 8px;box-sizing:border-box;" +
+        "-webkit-user-select:text;user-select:text;";
+      _wrapper.appendChild(_el);
+
+      _term = new Terminal({
+        fontFamily: untrack(() => get(terminalFontFamily)),
+        fontSize: untrack(() => get(terminalFontSize)),
+        cursorBlink: true,
+        scrollback: untrack(() => get(terminalScrollbackLines)),
+        theme: untrack(() => get(terminalTheme)),
+        allowProposedApi: true,
+      });
+      _fit = new FitAddon();
+      _search = new SearchAddon();
+      _serialize = new SerializeAddon();
+      _term.loadAddon(_fit);
+      _term.loadAddon(_search);
+      _term.loadAddon(_serialize);
+      _term.loadAddon(new WebLinksAddon());
+      _term.open(_el);
+      try { _fit.fit(); } catch {}
+
+      // Listener persistent — tetap aktif selama sesi hidup, melewati park/checkout.
+      // onSessionOutput sengaja tidak diputus saat park supaya buffer xterm tetap
+      // menerima output meskipun terminal sedang tersembunyi di parking div.
+      _term.onData((data) => {
+        if (get(broadcastMode)) broadcastWrite(data);
+        else writeSession(sid, data);
+      });
+
+      _term.onResize(({ cols, rows }) => resizeSession(sid, cols, rows));
+
+      onSessionOutput(sid, (bytes) => {
+        _term.write(bytes);
+        dirtyRef.value = true;
+      });
+
+      onSessionExit(sid, (code) => {
+        _term.write(`\r\n\x1b[90m[proses berakhir — kode ${code}]\x1b[0m\r\n`);
+        setRunning(sid, false);
+        untrack(() => { exited = true; });
+      });
+
+      _term.onSelectionChange(() => {
+        if (!get(copyOnSelect)) return;
+        const sel = _term.getSelection();
+        if (sel) void copyText(sel);
+      });
+
+      _el.addEventListener("auxclick", (ev: MouseEvent) => {
+        if (ev.button !== 1 || !get(middleClickPaste)) return;
+        ev.preventDefault();
+        void pasteInto(sid);
+      });
+
+      _el.addEventListener("contextmenu", (ev: MouseEvent) => {
+        ev.preventDefault();
+        menu = { x: ev.clientX, y: ev.clientY, hasSel: _term.hasSelection() };
+      });
+
+      restoreDone = untrack(() => maybeRestore(_term, sid));
+      if (untrack(() => connect)) connectPty(_term);
     }
 
-            const onData = _term.onData((data) => {
-      if (get(broadcastMode)) broadcastWrite(data);
-      else writeSession(session.id, data);
-    });
-
-        const onResize = _term.onResize(({ cols, rows }) =>
-      resizeSession(session.id, cols, rows),
-    );
-
-                const sid = untrack(() => session.id);
-
-        const offOut = onSessionOutput(sid, (bytes) => {
-      _term.write(bytes);
-      dirty = true;
-    });
-
-        const offExit = onSessionExit(sid, (code) => {
-      _term.write(`\r\n\x1b[90m[proses berakhir — kode ${code}]\x1b[0m\r\n`);
-      setRunning(sid, false);
-      untrack(() => { exited = true; });
-    });
-
-    // Copy/Paste keyboard: Ctrl+Shift+C/V (Cmd+C/V di macOS). Selain itu
-    // diteruskan ke PTY — termasuk Ctrl+C → SIGINT.
-    _term.attachCustomKeyEventHandler((e) => {
-      if (e.type !== "keydown") return true;
-      const mod = isMac ? e.metaKey && !e.ctrlKey : e.ctrlKey && e.shiftKey;
-      if (mod && e.code === "KeyC" && _term.hasSelection()) {
-        void copyText(_term.getSelection());
-        return false;
-      }
-      if (mod && e.code === "KeyV") {
-        void pasteInto(sid);
-        return false;
-      }
-      return true;
-    });
-
-    // Copy-on-select: salin otomatis saat seleksi berubah (bila diaktifkan).
-    const onSel = _term.onSelectionChange(() => {
-      if (!get(copyOnSelect)) return;
-      const sel = _term.getSelection();
-      if (sel) void copyText(sel);
-    });
-
-    // Middle-click paste (bila diaktifkan).
-    const onAux = (ev: MouseEvent) => {
-      if (ev.button !== 1 || !get(middleClickPaste)) return;
-      ev.preventDefault();
-      void pasteInto(sid);
-    };
-    el.addEventListener("auxclick", onAux);
-
-    // Context menu klik-kanan: tampilkan menu Copy/Paste.
-    const onCtx = (ev: MouseEvent) => {
-      ev.preventDefault();
-      menu = { x: ev.clientX, y: ev.clientY, hasSel: _term.hasSelection() };
-    };
-    el.addEventListener("contextmenu", onCtx);
-
-    const _ro = new ResizeObserver(() => refit());
-    _ro.observe(el);
-
+    // Sync Svelte state — untrack agar tidak memicu re-run effect.
     untrack(() => {
       term = _term;
       fit = _fit;
       search = _search;
-      cleanups = [
-        () => onData.dispose(),
-        () => onResize.dispose(),
-        offOut,
-        offExit,
-        () => onSel.dispose(),
-        () => el.removeEventListener("auxclick", onAux),
-        () => el.removeEventListener("contextmenu", onCtx),
-      ];
-      ro = _ro;
     });
 
-    // Pulihkan scrollback dulu, lalu (untuk eager connect) jalankan PTY.
-    // connectPty sendiri menunggu restoreDone, jadi urutan tetap benar walau
-    // koneksi terjadi lewat lazy-connect effect.
-    restoreDone = untrack(() => maybeRestore(_term, sid));
+    // ResizeObserver: ephemeral per-mount. Diputus saat park agar tidak
+    // memicu refit ke ukuran 0×0 di parking div.
+    const _ro = new ResizeObserver(() => refit());
+    _ro.observe(_wrapper);
 
-    if (untrack(() => connect)) connectPty(_term);
+    if (cached) {
+      // Setelah checkout: paksa refit supaya canvas menyesuaikan ukuran wrapper baru.
+      tick().then(() => {
+        try { _fit.fit(); } catch {}
+        const { cols, rows } = _term;
+        if (cols > 0 && rows > 0) resizeSession(sid, cols, rows);
+        if (untrack(() => visible && active)) _term.focus();
+      });
+    }
 
-    // Snapshot periodik anti-crash: hanya menserialisasi bila ada output baru.
+    // Snapshot periodik: ephemeral, hanya saat terminal visible/aktif.
     const _snap = setInterval(() => {
-      if (!dirty || !get(terminalPersistScrollback)) return;
-      dirty = false;
+      if (!dirtyRef.value || !get(terminalPersistScrollback)) return;
+      dirtyRef.value = false;
       try {
         persistScrollback(sid, _serialize.serialize());
       } catch {
@@ -279,7 +274,7 @@
     }, 10000);
 
     return () => {
-      // Snapshot terakhir sebelum dispose (serialize butuh terminal hidup).
+      // Snapshot terakhir sebelum park.
       if (untrack(() => get(terminalPersistScrollback))) {
         try {
           persistScrollback(sid, _serialize.serialize());
@@ -288,44 +283,51 @@
         }
       }
       clearInterval(_snap);
-      cleanups.forEach((fn) => fn());
       _ro.disconnect();
       if (fitTimer) clearTimeout(fitTimer);
-      _term.dispose();
+
+      // Park: pindahkan _el ke parking div, simpan entry ke registry.
+      // Listener persistent (onData, onSessionOutput, dll.) TIDAK diputus —
+      // onSessionOutput khususnya harus tetap aktif agar buffer ter-update
+      // saat terminal berada di background.
+      park(sid, {
+        term: _term,
+        fit: _fit,
+        search: _search,
+        serialize: _serialize,
+        el: _el,
+        dirtyRef,
+        started: untrack(() => started),
+      });
+
       untrack(() => {
         term = undefined;
         fit = undefined;
         search = undefined;
-        cleanups = [];
-        ro = undefined;
         menu = null;
       });
     };
   });
 
-    // Lazy-connect: session non-autoStart dirender tanpa PTY (connect=false).
-    // Saat akhirnya dipilih/dibuka (connect -> true), jalankan PTY sekali.
-    $effect(() => {
+  // Lazy-connect: session non-autoStart dirender tanpa PTY (connect=false).
+  // Saat akhirnya dipilih/dibuka (connect -> true), jalankan PTY sekali.
+  $effect(() => {
     if (!connect || !term || untrack(() => started)) return;
     connectPty(term);
   });
 
-    // Saat terminal jadi visible lagi (mis. switch workspace/tab), paksa
-    // fit + refresh setelah layout & paint. Pakai double-rAF: display:none ->
-    // block butuh satu frame untuk relayout, frame kedua untuk dimensi final.
-    // Tanpa ini WebKitGTK menampilkan paint basi (blank) sampai di-resize.
-    $effect(() => {
+  // Saat terminal jadi visible lagi (mis. switch workspace/tab), paksa
+  // fit + refresh setelah layout & paint. Pakai double-rAF: display:none ->
+  // block butuh satu frame untuk relayout, frame kedua untuk dimensi final.
+  // Tanpa ini WebKitGTK menampilkan paint basi (blank) sampai di-resize.
+  $effect(() => {
     if (!visible || !term) return;
     const _t = term;
     const _f = fit;
     const sid = untrack(() => session.id);
     requestAnimationFrame(() =>
       requestAnimationFrame(() => {
-        try {
-          _f?.fit();
-        } catch {
-
-        }
+        try { _f?.fit(); } catch {}
         const { cols, rows } = _t;
         if (cols > 0 && rows > 0) resizeSession(sid, cols, rows);
         _t.refresh(0, _t.rows - 1);
@@ -334,13 +336,13 @@
     );
   });
 
-    $effect(() => {
+  $effect(() => {
     if (active && visible && term) {
       tick().then(() => term?.focus());
     }
   });
 
-    $effect(() => {
+  $effect(() => {
     const sid = untrack(() => session.id);
     const count = $restartCount[sid];
     if (!count || !term) return;
@@ -357,7 +359,7 @@
     });
   });
 
-    $effect(() => {
+  $effect(() => {
     const size = $terminalFontSize;
     const family = $terminalFontFamily;
     const th = $terminalTheme;
@@ -373,18 +375,16 @@
     if (next) search?.findNext(query);
     else search?.findPrevious(query);
   }
-
 </script>
 
 <div
-  class="absolute inset-0 px-2 py-[6px]"
+  class="absolute inset-0"
   class:hidden={!visible}
   class:pointer-events-none={!visible}
-  bind:this={container}
+  bind:this={wrapper}
 ></div>
 
 {#if menu}
-  <!-- Backdrop transparan menutup menu saat klik di luar. -->
   <button
     class="ctx-backdrop"
     aria-label="Tutup menu"
@@ -417,7 +417,6 @@
 />
 
 <style>
-
   div {
     /* WebKitGTK menekan mousemove saat drag pada elemen user-select:none.
        Override di sini agar drag-to-select sampai ke xterm; xterm.css
@@ -430,8 +429,8 @@
   div :global(.xterm) {
     height: 100%;
   }
-  div :global(.xterm-viewport) {
 
+  div :global(.xterm-viewport) {
     scrollbar-width: thin;
   }
 
@@ -468,10 +467,12 @@
     text-align: left;
     cursor: pointer;
   }
+
   .ctx-item:hover:not(:disabled) {
     background: var(--color-active, #2a2a2a);
     color: #fff;
   }
+
   .ctx-item:disabled {
     color: #52525b;
     cursor: default;

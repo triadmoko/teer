@@ -16,10 +16,6 @@ export { workspaceSettingsDialog } from "./workspaceSettingsDialog";
 
 export async function init(): Promise<void> {
   await refresh();
-  const list = get(workspaces);
-  if (list.length && !get(activeWorkspaceId)) {
-    selectWorkspace(list[0].id);
-  }
 }
 
 export async function refresh(): Promise<void> {
